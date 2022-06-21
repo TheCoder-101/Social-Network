@@ -1,55 +1,48 @@
 # - Original -
+
 # -Libraries-
 library(shiny)
 library(shinydashboard)
-library(igraph)
-library(fontawesome)
 library(visNetwork)
-library(dplyr)
-#library(xlsx)
-#library(readxl)
-#library(motifr)
-#library(graphlayouts)
-#library(oaqc)
-#library(qgraph)
 
 # -Data-
-setwd("C:/Users/rohit/Downloads/Internship/R Shiny/Project") # SET THIS FIRST
-actoractorEdgelist <- read.csv("Reduced_Actor-Actor Edgelist.csv", header=TRUE)
-actorissueEdgelist <- read.csv("Reduced_Actor-Issue Edgelist.csv", header=TRUE)
+actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Reduced_Actor-Actor%20Edgelist.csv"), header=TRUE)
+actorissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Reduced_Actor-Issue%20Edgelist.csv"), header=TRUE)
 actorissueEdgelist <- actorissueEdgelist[!apply(actorissueEdgelist == "", 1, all),]
-issueissueEdgelist <- read.csv("USETHIS_issue-issue_data.csv", header=TRUE, nrows = 750)
+issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/USETHIS_issue-issue_data.csv"), header=TRUE, nrows = 750)
 
 # Issue Names for Some do NOT align with those in the other edge/node lists (Ex. Invasives) (IssueIssueEdgeList)
-actordescription <- read.csv("actor_descriptions.csv", header=TRUE)
+actordescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/actor_descriptions.csv"), header=TRUE)
 
 # -Variables-
-uniqueOrgs <- unique(unlist(actorissueEdgelist[1], use.names=FALSE)) # Length: 100
+uniqueOrganizations <- unique(unlist(actorissueEdgelist[1], use.names=FALSE)) # Length: 100
 uniquePolicies <- unique(unlist(actorissueEdgelist[2], use.names=FALSE)) # Length: 19
-allNodes <- c(uniqueOrgs, uniquePolicies)
+uniqueElements <- c(uniqueOrganizations, uniquePolicies)
 
-nodeEdge1 <- c( 
+nodeEdgeFrom <- c( 
   unlist(actoractorEdgelist[1], use.names=FALSE), 
   unlist(actorissueEdgelist[1], use.names=FALSE),
   gsub('\\s+', '', (unlist(issueissueEdgelist[1], use.names=FALSE)))
 )
 
-nodeEdge2 <- c(
+nodeEdgeTo <- c(
   unlist(actoractorEdgelist[2], use.names=FALSE), 
   unlist(actorissueEdgelist[2], use.names=FALSE),
   gsub('\\s+', '', (unlist(issueissueEdgelist[2], use.names=FALSE)))
 )
 
+edgeLength = length(nodeEdgeFrom)
+
 # -Tab 1 Nodes/Edges-
-nodes <- data.frame(
-  id = allNodes, 
-  label = allNodes, 
-  group = c(rep("Organization", (length(uniqueOrgs))), rep("Issue", ((length(uniquePolicies)))))
+allNodes <- data.frame(
+  id = uniqueElements, 
+  label = uniqueElements, 
+  group = c(rep("Organization", (length(uniqueOrganizations))), rep("Issue", (length(uniquePolicies))))
 )
 
-edges <- data.frame(
-  from = nodeEdge1, 
-  to = nodeEdge2,
+allEdges <- data.frame(
+  from = nodeEdgeFrom, 
+  to = nodeEdgeTo,
   color = c(
     rep("gray", (length(unlist(actoractorEdgelist[1])))), 
     rep("turquoise", (length(unlist(actorissueEdgelist[1])))),
@@ -65,57 +58,57 @@ edges <- data.frame(
     rep(0.5, (length(unlist(actorissueEdgelist[1])))),
     unlist(issueissueEdgelist[3], use.names=FALSE)[1:(length(unlist(issueissueEdgelist[1])))]
   ),
-  id = c(paste(nodeEdge1, nodeEdge2, 1:1739, sep="_"))
-  #group = c(rep("Organization", (length(actoractorEdgelist[1]))), rep("Issue", ((length(actorissueEdgelist[1])))))
+  id = c(paste(nodeEdgeFrom, nodeEdgeTo, 1:edgeLength, sep="_"))
 )
 
 # -Shiny UI-
 ui <- dashboardPage(
-  dashboardHeader(title = "Social Network"),
+  dashboardHeader(title = "Network Tool"),
   dashboardSidebar(
-    sidebarMenu(id = "tab", style = "position:fixed;width:220px;",
-                # -Sidebar-
-                #menuItem("Tab 2", tabName = "tab2", icon = icon("project-diagram")), 
-                menuItem("Tab 1", tabName = "tab1", icon = icon("project-diagram")), 
-                selectInput("filter", "Filter :", rbind(c("N/A"), nodes$id)),
-                checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
-                checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
-                actionButton("reset", "Reset Graphs")
+    sidebarMenu(id = "sidebar", style = "position:fixed;width:220px;",
+                
+      # -Tab 1-
+      menuItem("Tab 1", tabName = "tab1", icon = icon("project-diagram")), 
+        selectInput("filter", "Filter :", rbind(c("N/A"), allNodes$id)),
+        checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
+        checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
+        actionButton("reset", "Reset Graphs")
     )
   ),
   dashboardBody(
-    tags$head(tags$style(HTML('.content-wrapper { overflow: auto; }'))),
     tabItems(
       tabItem(tabName = "tab1",
-              # -Row 1-
-              fluidRow(
-                column(width = 3, 
-                       box(title = "Instructions", width = NULL, "This map is a full-sandbox network that shows every organization and issue, and all connections that exist between them."),
-                       box(title = "Description", width = NULL, htmlOutput('description1'))
-                ),
-                box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
-                box(title = "Table", width = 3, DT::dataTableOutput('table1'), downloadButton("downloadTable1", "Download")),
-              ),
-              
-              # -Row 2-
-              fluidRow(
-                column(width = 3,
-                       box(title = "Instructions", width = NULL, "This map is a is based off the selected filter, or the the selected node in the graph above. This network only shows organizations, issues, and their edges, that are connected to the filtered node."),
-                       box(title = "Description", width = NULL, htmlOutput('description2'))
-                ),
-                box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
-                box(title = "Table", width = 3, DT::dataTableOutput('table2'), downloadButton("downloadTable2", "Download"))
-              ),
-              
-              # -Row 3-
-              fluidRow(
-                column(width = 3,
-                       box(title = "Instructions", width = NULL, "This map is a is based off the selected filter, or the the selected node in the graph above. This network shows all organizations, issues, and their edges, that are connected to the filtered node, and categorizes them by color. green edges represent non-existant edges, Orange edges represent already existing edges, while Green edges represent edges between organizations and issues as before."),
-                       box(title = "Description", width = NULL)
-                ),
-                box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
-                box(title = "Table", width = 3, DT::dataTableOutput('tableBest3'), downloadButton("downloadTable3", "Download"))
-              )
+          
+          # -Row 1-
+          fluidRow(
+            column(width = 3, 
+              box(title = "Instructions", width = NULL, "This map is a full-sandbox network that shows every organization and issue, and all connections that exist between them."),
+              box(title = "Description", width = NULL, htmlOutput('description1'))
+            ),
+            box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
+            box(title = "Table", width = 3, DT::dataTableOutput('table1'), downloadButton("downloadTable1", "Download")),
+          ),
+          
+          # -Row 2-
+          fluidRow(
+            column(width = 3,
+              box(title = "Instructions", width = NULL, "This map is a is based off the selected filter, or the the selected node in the graph above. This network only shows organizations, issues, and their edges, that are connected to the filtered node."),
+              box(title = "Description", width = NULL, htmlOutput('description2'))
+            ),
+            box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
+            box(title = "Table", width = 3, DT::dataTableOutput('table2'), downloadButton("downloadTable2", "Download"))
+          ),
+          
+          # -Row 3-
+          fluidRow(
+            column(width = 3,
+              box(title = "Instructions", width = NULL, "This map is a is based off the selected filter, or the the selected node in the graph above. This network shows all organizations, issues, and their edges, that are connected to the filtered node, and categorizes them by color. green edges represent non-existant edges, Orange edges represent already existing edges, while Green edges represent edges between organizations and issues as before."),
+              box(title = "Description", width = NULL),
+              box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A"))
+            ),
+            box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
+            box(title = "Table", width = 3, DT::dataTableOutput('table3'), downloadButton("downloadTable3", "Download"))
+          )
       ),
       tabItem(tabName = "tab2"
               
@@ -126,32 +119,34 @@ ui <- dashboardPage(
 
 # -Shiny Server-
 server <- function(input, output, session) {
+  
   # -Tab 1 Graph-
   output$network_proxy_tab1  <- renderVisNetwork({
-    # -Create Filtered Node Set-
-    nodes1 <- cbind(nodes)
-    if(!input$checkOrg) nodes1 <- nodes1[nodes1$id %in% uniquePolicies, ]
-    if(!input$checkIss) nodes1 <- nodes1[nodes1$id %in% uniqueOrgs, ]
     
-    visNetwork(nodes1, edges, background = "white") %>%
+    # -Create Filtered Node Set-
+    nodes1 <- allNodes
+    if(!input$checkOrg) nodes1 <- nodes1[nodes1$id %in% uniquePolicies, ]
+    if(!input$checkIss) nodes1 <- nodes1[nodes1$id %in% uniqueOrganizations, ]
+    
+    visNetwork(nodes1, allEdges, background = "white") %>%
       
-      # -Node Groups-
-      visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
-      visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
-      
-      # -Current Node/Edge Functions-
-      visEvents(select = "function(data) {
-      Shiny.onInputChange('current_node_id', data.nodes);
-      Shiny.onInputChange('current_edges_id', data.edges);
-      ;}")  %>%
-      
-      # -Modifications-
-      visNodes(size = 10) %>%
-      visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
-      visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
-      visInteraction(dragNodes = FALSE) %>%
-      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical", hover = FALSE)) %>%
-      visConfigure(enabled = FALSE) # DEVS
+    # -Node Groups-
+    visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
+    visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
+    
+    # -Current Node/Edge Variables-
+    visEvents(select = "function(data) {
+    Shiny.onInputChange('current_node_id1', data.nodes);
+    Shiny.onInputChange('current_edges_id1', data.edges);
+    ;}")  %>%
+    
+    # -Modifications-
+    visNodes(size = 10) %>%
+    visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
+    visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
+    visInteraction(dragNodes = FALSE) %>%
+    visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical", hover = FALSE)) %>%
+    visConfigure(enabled = FALSE) # DEVS
   })
   
   # -Tab 2 Graph-
@@ -159,175 +154,174 @@ server <- function(input, output, session) {
     if(!input$filter == "N/A" & !input$filter == "")
     {
       # -Create Filtered Node Set-
-      nodesA <- nodes[nodes$id %in% current_connected_nodes$A, ]
-      nodesB <- data.frame(
+      connectedNodesA <- allNodes[allNodes$id %in% currentConnectedNodes$N, ]
+      selectedNodeB <- data.frame(
         id = input$filter, 
         label = input$filter, 
         group = "Selected"
       )
       
-      nodes2 <- rbind(nodesA, nodesB)
+      nodes2 <- rbind(connectedNodesA, selectedNodeB)
       
       if(!input$checkOrg) nodes2 <- nodes2[nodes2$id %in% uniquePolicies, ]
-      if(!input$checkIss) nodes2 <- nodes2[nodes2$id %in% uniqueOrgs, ]
+      if(!input$checkIss) nodes2 <- nodes2[nodes2$id %in% uniqueOrganizations, ]
       
-      visNetwork(nodes2, edges, background = "white") %>%
+      visNetwork(nodes2, allEdges, background = "white") %>%
         
-        # -Node Groups-
-        visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
-        visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
-        visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
-        
-        visEvents(select = "function(data) {
-        Shiny.onInputChange('current_node_id2', data.nodes);
-        Shiny.onInputChange('current_edges_id2', data.edges);
-        ;}")  %>%
-        
-        # -Modifications-
-        visNodes(size = 10) %>%
-        visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
-        visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
-        visInteraction(dragNodes = FALSE) %>%
-        visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical")) %>%
-        visConfigure(enabled = FALSE) # DEVS
+      # -Node Groups-
+      visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
+      visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
+      visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
+      
+      # -Current Node/Edge Variables-
+      visEvents(select = "function(data) {
+      Shiny.onInputChange('current_node_id2', data.nodes);
+      Shiny.onInputChange('current_edges_id2', data.edges);
+      ;}")  %>%
+      
+      # -Modifications-
+      visNodes(size = 10) %>%
+      visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
+      visIgraphLayout(randomSeed = 1, layout = "layout_nicely") %>%
+      visInteraction(dragNodes = FALSE) %>%
+      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical")) %>%
+      visConfigure(enabled = FALSE) # DEVS
     }
   })
   
   # - Tab 3 Graph-
   output$network_proxy_tab3  <- renderVisNetwork({
-    if(!input$filter == "N/A" & !input$filter == "" & input$filter %in% uniqueOrgs)
+    if(!input$filter == "N/A" & !input$filter == "" & input$filter %in% uniqueOrganizations)
     {
       # -Create Filtered Node Set-
-      nodesa <- nodes[nodes$id %in% current_connected_nodes$A, ]
-      nodesA <- nodesa[nodesa$id %in% uniquePolicies, ] # Policy Nodes
-      
-      nodesb <- vector()
-      for(x in 1:length(nodesA$id))
-      {
-        nodesb <- append(nodesb, actorissueEdgelist[nodesA$id[x] == actorissueEdgelist[2], 1])
+      connectedNodesa <- allNodes[allNodes$id %in% currentConnectedNodes$N, ]
+      connectedIssuesA <- NULL
+      if(!input$issueFilter == "N/A") {
+        connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% input$issueFilter, ] 
       }
-      OrgByIssueCount <- as_data_frame(table(nodesb))
-      OrgByIssueCount['n'] <- OrgByIssueCount['n']
+      else {
+        connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% uniquePolicies, ] 
+      }
+      connectedIssuesGraph3$N <- connectedIssuesA$id 
       
-      nodesb <- unique(nodesb)
-      nodesb <- nodesb[nodesb != input$filter]
       
-      nodesB <- data.frame( # Organization Nodes
-        id = nodesb,
-        label = nodesb,
+      orgsWithIssuesb <- vector() # Vector of all Instances of Organizations with Issues in [connectedIssuesA]
+      for(x in 1:length(connectedIssuesA$id))
+      {
+        orgsWithIssuesb <- append(orgsWithIssuesb, actorissueEdgelist[connectedIssuesA$id[x] == actorissueEdgelist[2], 1])
+      }
+      
+      OrgByIssueCount <- as.data.frame(table(orgsWithIssuesb)) # For Graph 3 Table
+      
+      orgsWithIssuesb <- unique(orgsWithIssuesb) # [orgsWithIssuesb] filters to unique Instances of Organizations
+      orgsWithIssuesb <- orgsWithIssuesb[orgsWithIssuesb != input$filter]
+      
+      orgNodesWithIssuesB <- data.frame( # Organization Nodes
+        id = orgsWithIssuesb,   
+        label = orgsWithIssuesb,
         group = "Organization"
       )
       
-      nodesC <- data.frame( # Selected Node
+      selectedNodeC <- data.frame( # Selected Node
         id = input$filter, 
         label = input$filter, 
         group = "Selected"
       )
       
-      nodes2 <- rbind(nodesA, nodesB, nodesC)
+      nodes3 <- rbind(connectedIssuesA, orgNodesWithIssuesB, selectedNodeC)
       
-      if(!input$checkOrg) nodes2 <- nodes2[nodes2$id %in% uniquePolicies, ]
-      if(!input$checkIss) nodes2 <- nodes2[nodes2$id %in% uniqueOrgs, ]
+      if(!input$checkOrg) nodes3 <- nodes3[nodes3$id %in% uniquePolicies, ]
+      if(!input$checkIss) nodes3 <- nodes3[nodes3$id %in% uniqueOrganizations, ]
       
-      #for(x in)
-      
-      df2$A <- nodes2
-      
-      setA <- nodesa[nodesa$id %in% uniqueOrgs, ]
-      setB <- nodesB[!(nodesB$id %in% setA$id), ]
-      
-      df3$A <- OrgByIssueCount[OrgByIssueCount$nodesb %in% setB$id,]
+      # -Create New Edge Set-
+      connectedOrgEdges <- connectedNodesa[connectedNodesa$id %in% uniqueOrganizations, ]
+      unconnectedOrgEdges <- orgNodesWithIssuesB[!(orgNodesWithIssuesB$id %in% connectedOrgEdges$id), ]
       
       newEdges <- data.frame(
-        from = c(rep(input$filter, length(setA$id)+length(setB$id)), actorissueEdgelist[,1]),
-        to = c(setA$id, setB$id, actorissueEdgelist[,2]),
+        from = c(rep(input$filter, length(connectedOrgEdges$id)+length(unconnectedOrgEdges$id)), actorissueEdgelist[,1]),
+        to = c(connectedOrgEdges$id, unconnectedOrgEdges$id, actorissueEdgelist[,2]),
         color = c(
-          rep("darkgreen", length(setA$id)),
-          rep("red", length(setB$id)),
+          rep("darkgreen", length(connectedOrgEdges$id)),
+          rep("red", length(unconnectedOrgEdges$id)),
           rep("lightgreen", length(actorissueEdgelist[,1]))
         )
       )
       
-      visNetwork(nodes2, newEdges, background = "white") %>%
-        # -Node Groups-
-        visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
-        visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
-        visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
-        
-        
-        visEvents(select = "function(data) {
-        Shiny.onInputChange('current_node_id3', data.nodes);
-        Shiny.onInputChange('current_edges_id3', data.edges);
-        ;}")  %>%
-        
-        # -Modifications-
-        visNodes(size = 10) %>%
-        visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
-        visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
-        visInteraction(dragNodes = FALSE) %>%
-        visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical")) %>%
-        visConfigure(enabled = FALSE) # DEVS
+      # -Table and Graph-
+      tableDataFrame$table3 <- OrgByIssueCount[OrgByIssueCount$orgsWithIssuesb %in% unconnectedOrgEdges$id,]
+      visNetwork(nodes3, newEdges, background = "white") %>%
+      
+      # -Node Groups-
+      visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
+      visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
+      visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
+      
+      # -Current Node/Edge Variables-
+      visEvents(select = "function(data) {
+      Shiny.onInputChange('current_node_id3', data.nodes);
+      Shiny.onInputChange('current_edges_id3', data.edges);
+      ;}")  %>%
+      
+      # -Modifications-
+      visNodes(size = 10) %>%
+      visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
+      visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
+      visInteraction(dragNodes = FALSE) %>%
+      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical")) %>%
+      visConfigure(enabled = FALSE) # DEVS
     }
   })
   
   # -Table-
-  output$table1 <- DT::renderDataTable(DT::datatable(nodes, options = list(lengthMenu = 16, pageLength = 16)))
-  output$table2 <- DT::renderDataTable(DT::datatable(df1$A, options = list(lengthMenu = 16, pageLength = 16)))
-  output$table3 <- DT::renderDataTable(DT::datatable(df2$A, options = list(lengthMenu = 16, pageLength = 16)))
-  output$tableBest3 <- DT::renderDataTable(DT::datatable(df3$A, options = list(lengthMenu = 16, pageLength = 16)))
+  output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, options = list(lengthMenu = 16, pageLength = 16)))
+  output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, options = list(lengthMenu = 16, pageLength = 16)))
+  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, options = list(lengthMenu = 16, pageLength = 16)))
   
   # Variables
-  current_connected_nodes <- reactiveValues(A = NULL) # Connected Nodes
-  df1 <- reactiveValues(A = NULL) # Data Table Variable
-  df2 <- reactiveValues(A = NULL) # Data Table Variable
-  df3 <- reactiveValues(A = NULL) # Data Table Variable
-  desc1 <- reactiveValues(A = FALSE)
-  desc2 <- reactiveValues(A = FALSE)
+  currentConnectedNodes <- reactiveValues(N = NULL) # Connected Nodes
+  tableDataFrame <- reactiveValues(table1 = allNodes, table2 = NULL, table3 = NULL)
+  connectedIssuesGraph3 <- reactiveValues(N = NULL)
   
   # Inputs
   resetCheck <- reactive({ list(input$reset) })
   
-  # Set: 'current_connected_nodes' / 'df1'
+  # Set: [currentConnectedNodes]
   observe({
     if(length(input$filter) == 1 & !input$filter == "N/A") {
-      # Set 'current_connected_nodes'
-      visConnectedNodesA <- nodeEdge2[nodeEdge1 %in% input$filter]
-      visConnectedNodesB <- nodeEdge1[nodeEdge2 %in% input$filter]
-      
-      current_connected_nodes$A <- unique(c(visConnectedNodesA, visConnectedNodesB))
-      
-      # Set 'df1'
-      nodesA <- nodes[nodes$id %in% current_connected_nodes$A, ]
+      connectedNodesTo <- nodeEdgeTo[nodeEdgeFrom %in% input$filter]
+      connectedNodesFrom <- nodeEdgeFrom[nodeEdgeTo %in% input$filter]
+      currentConnectedNodes$N <- unique(c(connectedNodesTo, connectedNodesFrom))
+    }
+    else {
+      currentConnectedNodes$N <- NULL
+    }
+  })
+  
+  # Set: [tableDataFrame$table2]
+  observe({
+    if(length(input$filter) == 1 & !input$filter == "N/A") {
+      nodesA <- allNodes[allNodes$id %in% currentConnectedNodes$N, ]
       nodesB <- data.frame(id = input$filter, label = input$filter, group = "Selected")
       nodesAB <- rbind(nodesB, nodesA)
       
-      if(!input$checkOrg) nodesAB <- nodesAB[nodesAB$id %in% uniquePolicies, ]
-      if(!input$checkIss) nodesAB <- nodesAB[nodesAB$id %in% uniqueOrgs, ]
-      
-      df1$A <- nodesAB
+      tableDataFrame$table2 <- nodesAB
     }
-    else
-    {
-      df1$A <- NULL
+    else {
+      tableDataFrame$table2 <- NULL
     }
   })
   
-  # Set 'df2'
+  # Set: [tableDataFrame$table3]
   observe({
     if(input$filter == "N/A")
     {
-      df2 <- NULL
-      df3 <- NULL
+      tableDataFrame$table3 <- NULL
     }
   })
   
-  # Update: Graph from Filter Box
+  # Update: Graph 1 from Filter Box
   observe({
     visNetworkProxy("network_proxy_tab1") %>%
-      visUnselectAll() %>%
-      visSelectNodes(id = input$filter) %>%
-      visFocus(id = input$filter, scale = 1, locked = FALSE, animation = list(duration = 500))
-    visNetworkProxy("network_proxy_tab3") %>%
       visUnselectAll() %>%
       visSelectNodes(id = input$filter) %>%
       visFocus(id = input$filter, scale = 1, locked = FALSE, animation = list(duration = 500))
@@ -335,8 +329,8 @@ server <- function(input, output, session) {
   
   # Update: Filter Box from Graph 1
   observe({
-    if(is.null(input$current_node_id)) updateSelectInput(session, "filter", selected = "N/A")
-    else updateSelectInput(session, "filter", selected = input$current_node_id)
+    if(is.null(input$current_node_id1)) updateSelectInput(session, "filter", selected = "N/A")
+    else updateSelectInput(session, "filter", selected = input$current_node_id1)
   })
   
   # Update: Filter Box from Graph 2
@@ -345,13 +339,13 @@ server <- function(input, output, session) {
     else updateSelectInput(session, "filter", selected = input$current_node_id2)
   })
   
-  # Update: Description Box from Issue-Issue Edge
+  # Update: Graph 1 Description Box from Issue-Issue Edge
   output$description1 <- renderUI({
-    if(!is.null(input$current_node_id)) actordescription[actordescription$actor_list == input$current_node_id, 3]
-    else if(!is.null(input$current_edges_id)) 
+    if(!is.null(input$current_node_id1)) actordescription[actordescription$actor_list == input$current_node_id1, 3]
+    else if(!is.null(input$current_edges_id1)) 
     {
-      node1 <- sub("\\_.*", "", input$current_edges_id)
-      node2 <- sub("\\_.*", "", substr(input$current_edges_id, nchar(node1)+2, nchar(input$current_edges_id)))
+      node1 <- sub("\\_.*", "", input$current_edges_id1)
+      node2 <- sub("\\_.*", "", substr(input$current_edges_id1, nchar(node1)+2, nchar(input$current_edges_id1)))
       
       newList <- data.frame(gsub('\\s+', '', (unlist(issueissueEdgelist[, 1], use.names=FALSE))),
                             gsub('\\s+', '', (unlist(issueissueEdgelist[, 2], use.names=FALSE))), issueissueEdgelist[, 4])
@@ -359,6 +353,7 @@ server <- function(input, output, session) {
     }
   })
   
+  # Update: Graph 2 Description Box from Issue-Issue Edge
   output$description2 <- renderUI({
     if(!is.null(input$current_node_id2)) actordescription[actordescription$actor_list == input$current_node_id2, 3]
     else if(!is.null(input$current_edges_id2)) 
@@ -372,6 +367,7 @@ server <- function(input, output, session) {
     }
   })
   
+  # Update: Graph 3 Description Box from Issue-Issue Edge
   output$description3 <- renderUI({
     if(!is.null(input$current_node_id3)) actordescription[actordescription$actor_list == input$current_node_id3, 3]
     else if(!is.null(input$current_edges_id3)) 
@@ -385,6 +381,17 @@ server <- function(input, output, session) {
     }
   })
   
+  # Update: Graph 3 Issue Filter Box P1
+  observe({
+    print(input$issueFilter)
+    if(input$issueFilter == "N/A") updateSelectInput(session, "issueFilter", choices = c("N/A", connectedIssuesGraph3$N))
+    
+  })
+  # Update: Graph 3 Issue Filter Box P12
+  observeEvent(input$filter,{
+    updateSelectInput(session, "issueFilter", choices = "N/A", selected = "N/A")
+  })
+  
   # Observe: Reset 
   observeEvent(resetCheck(), {
     updateSelectInput(session, "filter", selected = "N/A")
@@ -392,34 +399,35 @@ server <- function(input, output, session) {
     updateSelectInput(session, "checkIss", selected = TRUE)
     visNetworkProxy("network_proxy_tab1") %>%
       visFit(animation = list(duration=650))
-    visNetworkProxy("network_proxy_tab3") %>%
-      visFit(animation = list(duration=650))
   })
   
+  # -Download Table 1-
   output$downloadTable1 <- downloadHandler(
     filename = function() {
       paste("table1", ".csv", sep = "")
     },
     content = function(file) {
-      write.csv(nodes, file, row.names = FALSE)
+      write.csv(allNodes, file, row.names = FALSE)
     }
   )
   
+  # -Download Table 2-
   output$downloadTable2 <- downloadHandler(
     filename = function() {
       paste("table2", ".csv", sep = "")
     },
     content = function(file) {
-      write.csv(df1$A, file, row.names = FALSE)
+      write.csv(tableDataFrame$table2, file, row.names = FALSE)
     }
   )
   
+  # -Download Table 3-
   output$downloadTable3 <- downloadHandler(
     filename = function() {
       paste("table3", ".csv", sep = "")
     },
     content = function(file) {
-      write.csv(df3$A, file, row.names = FALSE)
+      write.csv(tableDataFrame$table3, file, row.names = FALSE)
     }
   )
 }
