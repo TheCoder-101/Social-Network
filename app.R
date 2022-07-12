@@ -7,13 +7,10 @@ library(visNetwork)
 library(igraph)
 
 # -Data-
-actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Reduced_Actor-Actor%20Edgelist.csv"), header=TRUE)
-actorissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Reduced_Actor-Issue%20Edgelist.csv"), header=TRUE)
-actorissueEdgelist <- actorissueEdgelist[!apply(actorissueEdgelist == "", 1, all),]
+actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_ActorEdgelist.csv"), header=TRUE)
+actorissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_AI_Edgelist.csv"), header=TRUE)
 issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/USETHIS_issue-issue_data.csv"), header=TRUE, nrows = 750)
-
-# Issue Names for Some do NOT align with those in the other edge/node lists (Ex. Invasives) (IssueIssueEdgeList)
-actordescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/actor_descriptions.csv"), header=TRUE)
+actordescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_Nodelist.csv"), header=TRUE)
 
 # -Variables-
 uniqueOrganizations <- unique(unlist(actorissueEdgelist[1], use.names=FALSE)) # Length: 100
@@ -102,7 +99,7 @@ ui <- dashboardPage(
     fluidRow(
       column(width = 3,
         box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
-        box(title = "Description of Selected Node/Edge", width = NULL),
+        box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
         box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A"))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
@@ -328,13 +325,7 @@ server <- function(input, output, session) {
     if(is.null(input$current_node_id1)) updateSelectInput(session, "filter", selected = "N/A")
     else updateSelectInput(session, "filter", selected = input$current_node_id1)
   })
-  
-  # Update: Filter Box from Graph 2
-  #observe({
-  #  if(is.null(input$current_node_id2)) updateSelectInput(session, "filter", selected = "N/A")
-  #  else updateSelectInput(session, "filter", selected = input$current_node_id2)
-  #})
-  
+
   # Update: Graph 1 Description Box from Issue-Issue Edge
   output$description1 <- renderUI({
     if(!is.null(input$current_node_id1)) actordescription[actordescription$actor_list == input$current_node_id1, 3]
@@ -380,7 +371,6 @@ server <- function(input, output, session) {
   # Update: Graph 3 Issue Filter Box P1
   observe({
     if(input$issueFilter == "N/A") updateSelectInput(session, "issueFilter", choices = c("N/A", connectedIssuesGraph3$N))
-    
   })
   # Update: Graph 3 Issue Filter Box P12
   observeEvent(input$filter,{
@@ -395,36 +385,6 @@ server <- function(input, output, session) {
     visNetworkProxy("network_proxy_tab1") %>%
       visFit(animation = list(duration=650))
   })
-  
-  # -Download Table 1-
-  output$downloadTable1 <- downloadHandler(
-    filename = function() {
-      paste("table1", ".csv", sep = "")
-    },
-    content = function(file) {
-      write.csv(allNodes, file, row.names = FALSE)
-    }
-  )
-  
-  # -Download Table 2-
-  output$downloadTable2 <- downloadHandler(
-    filename = function() {
-      paste("table2", ".csv", sep = "")
-    },
-    content = function(file) {
-      write.csv(tableDataFrame$table2, file, row.names = FALSE)
-    }
-  )
-  
-  # -Download Table 3-
-  output$downloadTable3 <- downloadHandler(
-    filename = function() {
-      paste("table3", ".csv", sep = "")
-    },
-    content = function(file) {
-      write.csv(tableDataFrame$table3, file, row.names = FALSE)
-    }
-  )
 }
 # -Run-
 shinyApp(ui = ui, server = server)
