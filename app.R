@@ -4,6 +4,7 @@
 library(shiny)
 library(shinydashboard)
 library(visNetwork)
+library(igraph)
 
 # -Data-
 actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Reduced_Actor-Actor%20Edgelist.csv"), header=TRUE)
@@ -68,51 +69,44 @@ ui <- dashboardPage(
     sidebarMenu(id = "sidebar", style = "position:fixed;width:220px;",
                 
       # -Tab 1-
-      menuItem("Tab 1", tabName = "tab1", icon = icon("project-diagram")), 
-        selectInput("filter", "Filter :", rbind(c("N/A"), allNodes$id)),
-        checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
-        checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
-        actionButton("reset", "Reset Graphs")
+      selectInput("filter", "Select Organization or Issue:", rbind(c("N/A"), allNodes$id)),
+      checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
+      checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
+      hr(),
+      actionButton("reset", "Reset Networks")
     )
   ),
   dashboardBody(
-    tabItems(
-      tabItem(tabName = "tab1",
-          
-          # -Row 1-
-          fluidRow(
-            column(width = 3, 
-              box(title = "Instructions", width = NULL, "This map is a full-sandbox network that shows every organization and issue, and all connections that exist between them."),
-              box(title = "Description", width = NULL, htmlOutput('description1'))
-            ),
-            box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
-            box(title = "Table", width = 3, DT::dataTableOutput('table1'), downloadButton("downloadTable1", "Download")),
-          ),
-          
-          # -Row 2-
-          fluidRow(
-            column(width = 3,
-              box(title = "Instructions", width = NULL, "This map is a is based off the selected filter, or the the selected node in the graph above. This network only shows organizations, issues, and their edges, that are connected to the filtered node."),
-              box(title = "Description", width = NULL, htmlOutput('description2'))
-            ),
-            box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
-            box(title = "Table", width = 3, DT::dataTableOutput('table2'), downloadButton("downloadTable2", "Download"))
-          ),
-          
-          # -Row 3-
-          fluidRow(
-            column(width = 3,
-              box(title = "Instructions", width = NULL, "This map is a is based off the selected filter, or the the selected node in the graph above. This network shows all organizations, issues, and their edges, that are connected to the filtered node, and categorizes them by color. green edges represent non-existant edges, Orange edges represent already existing edges, while Green edges represent edges between organizations and issues as before."),
-              box(title = "Description", width = NULL),
-              box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A"))
-            ),
-            box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
-            box(title = "Table", width = 3, DT::dataTableOutput('table3'), downloadButton("downloadTable3", "Download"))
-          )
+    
+    # -Row 1-
+    fluidRow(
+      column(width = 3, 
+        box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
+        box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
       ),
-      tabItem(tabName = "tab2"
-              
-      )
+      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
+      box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
+    ),
+    
+    # -Row 2-
+    fluidRow(
+      column(width = 3,
+        box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
+        box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
+      ),
+      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
+      box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2'))
+    ),
+    
+    # -Row 3-
+    fluidRow(
+      column(width = 3,
+        box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
+        box(title = "Description of Selected Node/Edge", width = NULL),
+        box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A"))
+      ),
+      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
+      box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
     )
   )
 )
@@ -267,19 +261,19 @@ server <- function(input, output, session) {
       visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
       visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
       visInteraction(dragNodes = FALSE) %>%
-      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical")) %>%
+      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical"), manipulation = TRUE) %>%
       visConfigure(enabled = FALSE) # DEVS
     }
   })
   
   # -Table-
-  output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, options = list(lengthMenu = 16, pageLength = 16)))
-  output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, options = list(lengthMenu = 16, pageLength = 16)))
-  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, options = list(lengthMenu = 16, pageLength = 16)))
+  output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, colnames = c("Node", "Group"), rownames = FALSE, selection = 'none', options = list(lengthChange = FALSE, pageLength = 16)))
+  output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, colnames = c("Node", "Group"), rownames = FALSE, selection = 'none', options = list(lengthChange = FALSE, pageLength = 16)))
+  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, colnames = c("Organization", "Frequency"), rownames = FALSE, selection = 'none', options = list(lengthChange = FALSE, pageLength = 16)))
   
   # Variables
   currentConnectedNodes <- reactiveValues(N = NULL) # Connected Nodes
-  tableDataFrame <- reactiveValues(table1 = allNodes, table2 = NULL, table3 = NULL)
+  tableDataFrame <- reactiveValues(table1 = subset(allNodes, select = -c(label)), table2 = NULL, table3 = NULL)
   connectedIssuesGraph3 <- reactiveValues(N = NULL)
   
   # Inputs
@@ -304,7 +298,9 @@ server <- function(input, output, session) {
       nodesB <- data.frame(id = input$filter, label = input$filter, group = "Selected")
       nodesAB <- rbind(nodesB, nodesA)
       
+      nodesAB <- subset(nodesAB, select = -c(label))
       tableDataFrame$table2 <- nodesAB
+
     }
     else {
       tableDataFrame$table2 <- NULL
@@ -334,10 +330,10 @@ server <- function(input, output, session) {
   })
   
   # Update: Filter Box from Graph 2
-  observe({
-    if(is.null(input$current_node_id2)) updateSelectInput(session, "filter", selected = "N/A")
-    else updateSelectInput(session, "filter", selected = input$current_node_id2)
-  })
+  #observe({
+  #  if(is.null(input$current_node_id2)) updateSelectInput(session, "filter", selected = "N/A")
+  #  else updateSelectInput(session, "filter", selected = input$current_node_id2)
+  #})
   
   # Update: Graph 1 Description Box from Issue-Issue Edge
   output$description1 <- renderUI({
@@ -383,7 +379,6 @@ server <- function(input, output, session) {
   
   # Update: Graph 3 Issue Filter Box P1
   observe({
-    print(input$issueFilter)
     if(input$issueFilter == "N/A") updateSelectInput(session, "issueFilter", choices = c("N/A", connectedIssuesGraph3$N))
     
   })
