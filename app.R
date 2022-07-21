@@ -9,7 +9,7 @@ library(igraph)
 # -Data-
 actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_ActorEdgelist.csv"), header=TRUE)
 actorissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_AI_Edgelist.csv"), header=TRUE)
-issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/USETHIS_issue-issue_data.csv"), header=TRUE, nrows = 750)
+issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/ii_edgelist_weights.csv"), header=TRUE, nrows = 750)
 actordescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_Nodelist.csv"), header=TRUE)
 
 # -Variables-
@@ -388,3 +388,4 @@ server <- function(input, output, session) {
 }
 # -Run-
 shinyApp(ui = ui, server = server)
+
