@@ -9,7 +9,7 @@ library(igraph)
 # -Data-
 actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_ActorEdgelist.csv"), header=TRUE)
 actorissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_AI_Edgelist.csv"), header=TRUE)
-issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/USETHIS_issue-issue_data.csv"), header=TRUE, nrows = 750)
+issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/ii_edgelist_weights.csv"), header=TRUE)
 actordescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/Sunbelt_Nodelist.csv"), header=TRUE)
 
 # -Variables-
@@ -100,7 +100,8 @@ ui <- dashboardPage(
       column(width = 3,
         box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
         box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
-        box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A"))
+        box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
+        box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
       box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
@@ -187,21 +188,17 @@ server <- function(input, output, session) {
       # -Create Filtered Node Set-
       connectedNodesa <- allNodes[allNodes$id %in% currentConnectedNodes$N, ]
       connectedIssuesA <- NULL
-      if(!input$issueFilter == "N/A") {
-        connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% input$issueFilter, ] 
-      }
-      else {
-        connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% uniquePolicies, ] 
-      }
-      connectedIssuesGraph3$N <- connectedIssuesA$id 
       
-      
+      if(!input$issueFilter == "N/A") connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% input$issueFilter, ] 
+      else connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% uniquePolicies, ] 
+
       orgsWithIssuesb <- vector() # Vector of all Instances of Organizations with Issues in [connectedIssuesA]
       for(x in 1:length(connectedIssuesA$id))
       {
         orgsWithIssuesb <- append(orgsWithIssuesb, actorissueEdgelist[connectedIssuesA$id[x] == actorissueEdgelist[2], 1])
       }
       
+      if(!input$orgFilter == "N/A") orgsWithIssuesb <- orgsWithIssuesb[orgsWithIssuesb %in% input$orgFilter]
       OrgByIssueCount <- as.data.frame(table(orgsWithIssuesb)) # For Graph 3 Table
       
       orgsWithIssuesb <- unique(orgsWithIssuesb) # [orgsWithIssuesb] filters to unique Instances of Organizations
@@ -219,6 +216,8 @@ server <- function(input, output, session) {
         group = "Selected"
       )
       
+      connectedNodesGraph3$A <- connectedIssuesA$id
+      connectedNodesGraph3$B <- orgNodesWithIssuesB$id
       nodes3 <- rbind(connectedIssuesA, orgNodesWithIssuesB, selectedNodeC)
       
       if(!input$checkOrg) nodes3 <- nodes3[nodes3$id %in% uniquePolicies, ]
@@ -264,14 +263,14 @@ server <- function(input, output, session) {
   })
   
   # -Table-
-  output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, colnames = c("Node", "Group"), rownames = FALSE, selection = 'none', options = list(lengthChange = FALSE, pageLength = 16)))
-  output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, colnames = c("Node", "Group"), rownames = FALSE, selection = 'none', options = list(lengthChange = FALSE, pageLength = 16)))
-  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, colnames = c("Organization", "Frequency"), rownames = FALSE, selection = 'none', options = list(lengthChange = FALSE, pageLength = 16)))
+  output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, colnames = c("Abrv."), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 16)))
+  output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, colnames = c("Abrv."), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 16)))
+  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, colnames = c("Abrv.", "Gaps"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 16)))
   
   # Variables
   currentConnectedNodes <- reactiveValues(N = NULL) # Connected Nodes
-  tableDataFrame <- reactiveValues(table1 = subset(allNodes, select = -c(label)), table2 = NULL, table3 = NULL)
-  connectedIssuesGraph3 <- reactiveValues(N = NULL)
+  tableDataFrame <- reactiveValues(table1 = subset(allNodes, select = -c(label, group)), table2 = NULL, table3 = NULL)
+  connectedNodesGraph3 <- reactiveValues(A = NULL, B = NULL) # A: Issues, B: Organizations
   
   # Inputs
   resetCheck <- reactive({ list(input$reset) })
@@ -295,9 +294,8 @@ server <- function(input, output, session) {
       nodesB <- data.frame(id = input$filter, label = input$filter, group = "Selected")
       nodesAB <- rbind(nodesB, nodesA)
       
-      nodesAB <- subset(nodesAB, select = -c(label))
+      nodesAB <- subset(nodesAB, select = -c(label, group))
       tableDataFrame$table2 <- nodesAB
-
     }
     else {
       tableDataFrame$table2 <- NULL
@@ -368,13 +366,43 @@ server <- function(input, output, session) {
     }
   })
   
-  # Update: Graph 3 Issue Filter Box P1
-  observe({
-    if(input$issueFilter == "N/A") updateSelectInput(session, "issueFilter", choices = c("N/A", connectedIssuesGraph3$N))
-  })
-  # Update: Graph 3 Issue Filter Box P12
+  # Update: Graph 3 Issue/Organization Filter Box 
   observeEvent(input$filter,{
     updateSelectInput(session, "issueFilter", choices = "N/A", selected = "N/A")
+    updateSelectInput(session, "orgFilter", choices = "N/A", selected = "N/A")
+  })
+  # Update: Graph 3 Issue/Organization Filter Box N/A Reset
+  observe({
+    if(input$issueFilter == "N/A") updateSelectInput(session, "issueFilter", choices = c("N/A", connectedNodesGraph3$A))
+    if(input$orgFilter == "N/A") updateSelectInput(session, "orgFilter", choices = c("N/A", connectedNodesGraph3$B))
+  })
+  
+  # Observe: Graph 1
+  observeEvent(input$table1_cell_clicked, {
+    a <- tableDataFrame$table1[input$table1_rows_selected,1]
+    if(length(a) == 1)
+    {
+      visNetworkProxy("network_proxy_tab1") %>%
+        visFocus(id = a, scale = 1, locked = FALSE, animation = list(duration = 500))
+    }
+  })
+  # Observe: Graph 2
+  observeEvent(input$table2_cell_clicked, {
+    a <- tableDataFrame$table2[input$table2_rows_selected,1]
+    if(length(a) == 1)
+    {
+      visNetworkProxy("network_proxy_tab2") %>%
+        visFocus(id = a, scale = 2, locked = FALSE, animation = list(duration = 500))
+    }
+  })
+  # Observe: Graph 3
+  observeEvent(input$table3_cell_clicked, {
+    a <- tableDataFrame$table3[input$table3_rows_selected,1]
+    if(length(a) == 1)
+    {
+      visNetworkProxy("network_proxy_tab3") %>%
+        visFocus(id = a, scale = 1, locked = FALSE, animation = list(duration = 500))
+    }
   })
   
   # Observe: Reset 
