@@ -79,7 +79,7 @@ ui <- dashboardPage(
     fluidRow(
       column(width = 3, 
         box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
-        box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
+        box(title = "Description of Selected Node or Linkage", width = NULL, htmlOutput('description1'))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
       box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
@@ -89,7 +89,7 @@ ui <- dashboardPage(
     fluidRow(
       column(width = 3,
         box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
-        box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
+        box(title = "Description of Selected Node or Linkage", width = NULL, htmlOutput('description2'))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
       box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2'))
@@ -99,7 +99,7 @@ ui <- dashboardPage(
     fluidRow(
       column(width = 3,
         box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
-        box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
+        box(title = "Description of Selected Node or Linkage", width = NULL, htmlOutput('description3')),
         box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
         box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
       ),
