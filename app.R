@@ -11,6 +11,7 @@ actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/A
 actorissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/epn_ai_edgelist.csv"), header=TRUE)
 issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/ii_edgelist_weights.csv"), header=TRUE)
 actordescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/epn_actorattributes.csv"), header=TRUE)
+issuedescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/epn_issueattributes.csv"), header=TRUE)
 
 # -Variables-
 uniqueOrganizations <- unique(unlist(actorissueEdgelist[1], use.names=FALSE)) # Length: 100
@@ -64,7 +65,7 @@ ui <- dashboardPage(
   dashboardHeader(title = "Network Tool"),
   dashboardSidebar(
     sidebarMenu(id = "sidebar", style = "position:fixed;width:220px;",
-                
+      
       # -Tab 1-
       selectInput("filter", "Select Organization or Issue:", rbind(c("N/A"), allNodes$id)),
       checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
@@ -78,8 +79,8 @@ ui <- dashboardPage(
     # -Row 1-
     fluidRow(
       column(width = 3, 
-        box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
-        box(title = "Description of Selected Node or Linkage", width = NULL, htmlOutput('description1'))
+       box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
+       box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
       box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
@@ -88,8 +89,8 @@ ui <- dashboardPage(
     # -Row 2-
     fluidRow(
       column(width = 3,
-        box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
-        box(title = "Description of Selected Node or Linkage", width = NULL, htmlOutput('description2'))
+       box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
+       box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
       box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2'))
@@ -98,10 +99,10 @@ ui <- dashboardPage(
     # -Row 3-
     fluidRow(
       column(width = 3,
-        box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
-        box(title = "Description of Selected Node or Linkage", width = NULL, htmlOutput('description3')),
-        box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
-        box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
+       box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
+       box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
+       box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
+       box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
       box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
@@ -121,7 +122,7 @@ server <- function(input, output, session) {
     if(!input$checkIss) nodes1 <- nodes1[nodes1$id %in% uniqueOrganizations, ]
     
     visNetwork(nodes1, allEdges, background = "white") %>%
-      
+    
     # -Node Groups-
     visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
     visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
@@ -170,7 +171,7 @@ server <- function(input, output, session) {
       Shiny.onInputChange('current_node_id2', data.nodes);
       Shiny.onInputChange('current_edges_id2', data.edges);
       ;}")  %>%
-      
+        
       # -Modifications-
       visNodes(size = 10) %>%
       visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
@@ -191,7 +192,7 @@ server <- function(input, output, session) {
       
       if(!input$issueFilter == "N/A") connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% input$issueFilter, ] 
       else connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% uniquePolicies, ] 
-
+      
       orgsWithIssuesb <- vector() # Vector of all Instances of Organizations with Issues in [connectedIssuesA]
       for(x in 1:length(connectedIssuesA$id))
       {
@@ -237,10 +238,15 @@ server <- function(input, output, session) {
         )
       )
       
-      # -Table and Graph-
-      tableDataFrame$table3 <- OrgByIssueCount[OrgByIssueCount$orgsWithIssuesb %in% unconnectedOrgEdges$id,]
-      visNetwork(nodes3, newEdges, background = "white") %>%
+      # -Table-
+      temp <- OrgByIssueCount[OrgByIssueCount$orgsWithIssuesb %in% unconnectedOrgEdges$id,]
+      actorNameCol <- actordescription[actordescription$actor_list %in% temp$orgsWithIssuesb, 1:2]
+      temp <- merge(temp, actorNameCol, by.x = "orgsWithIssuesb", by.y = 'actor_list', all = TRUE)
+      tableDataFrame$table3 <- temp[, c(1,3,2)]
       
+      # -Graph-
+      visNetwork(nodes3, newEdges, background = "white") %>%
+        
       # -Node Groups-
       visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
       visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
@@ -263,13 +269,13 @@ server <- function(input, output, session) {
   })
   
   # -Table-
-  output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, colnames = c("Abrv."), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 16)))
-  output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, colnames = c("Abrv."), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 16)))
-  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, colnames = c("Abrv.", "Gaps"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 16)))
+  output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, colnames = c("Abbrev.","Name","Type"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11)))
+  output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, colnames = c("Abbrev.","Name","Type"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11)))
+  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, colnames = c("Abbrev.","Name", "Gaps"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11)))
   
   # Variables
   currentConnectedNodes <- reactiveValues(N = NULL) # Connected Nodes
-  tableDataFrame <- reactiveValues(table1 = subset(allNodes, select = -c(label, group)), table2 = NULL, table3 = NULL)
+  tableDataFrame <- reactiveValues(table1 = NULL, table2 = NULL, table3 = NULL)
   connectedNodesGraph3 <- reactiveValues(A = NULL, B = NULL) # A: Issues, B: Organizations
   
   # Inputs
@@ -287,6 +293,17 @@ server <- function(input, output, session) {
     }
   })
   
+  # Set: [tableDataFrame$table1]
+  observe({
+    actorNameCol <- actordescription[actordescription$actor_list %in% allNodes$id, c(1:2,4)]
+    issueNameCol <- issuedescription[issuedescription$abbr_issue %in% allNodes$id, 1:2]
+    if(nrow(issueNameCol) != 0) issueNameCol['type'] <- NA
+    colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
+    temp <- rbind(actorNameCol, issueNameCol)
+    
+    tableDataFrame$table1 <- temp[, c(2,1,3)]
+  })
+  
   # Set: [tableDataFrame$table2]
   observe({
     if(length(input$filter) == 1 & !input$filter == "N/A") {
@@ -295,7 +312,15 @@ server <- function(input, output, session) {
       nodesAB <- rbind(nodesB, nodesA)
       
       nodesAB <- subset(nodesAB, select = -c(label, group))
-      tableDataFrame$table2 <- nodesAB
+      actorNameCol <- actordescription[actordescription$actor_list %in% nodesAB$id, c(1:2,4)]
+      issueNameCol <- issuedescription[issuedescription$abbr_issue %in% nodesAB$id, 1:2]
+      if(nrow(issueNameCol) != 0){
+        issueNameCol['type'] <- NA
+        colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
+      } 
+      
+      temp <- rbind(actorNameCol, issueNameCol)
+      tableDataFrame$table2 <- temp[, c(2,1,3)]
     }
     else {
       tableDataFrame$table2 <- NULL
@@ -323,10 +348,14 @@ server <- function(input, output, session) {
     if(is.null(input$current_node_id1)) updateSelectInput(session, "filter", selected = "N/A")
     else updateSelectInput(session, "filter", selected = input$current_node_id1)
   })
-
-  # Update: Graph 1 Description Box from Issue-Issue Edge
+  
+  # Update: Graph 1 Description Box
   output$description1 <- renderUI({
-    if(!is.null(input$current_node_id1)) actordescription[actordescription$actor_list == input$current_node_id1, 3]
+    if(!is.null(input$current_node_id1))
+    {
+      if(input$current_node_id1 %in% uniquePolicies) issuedescription[issuedescription$abbr_issue == input$current_node_id1, 3]
+      else actordescription[actordescription$actor_list == input$current_node_id1, 3]
+    }
     else if(!is.null(input$current_edges_id1)) 
     {
       node1 <- sub("\\_.*", "", input$current_edges_id1)
@@ -338,9 +367,13 @@ server <- function(input, output, session) {
     }
   })
   
-  # Update: Graph 2 Description Box from Issue-Issue Edge
+  # Update: Graph 2 Description Box
   output$description2 <- renderUI({
-    if(!is.null(input$current_node_id2)) actordescription[actordescription$actor_list == input$current_node_id2, 3]
+    if(!is.null(input$current_node_id2))
+    {
+      if(input$current_node_id2 %in% uniquePolicies) issuedescription[issuedescription$abbr_issue == input$current_node_id2, 3]
+      else actordescription[actordescription$actor_list == input$current_node_id2, 3]
+    }
     else if(!is.null(input$current_edges_id2)) 
     {
       node1 <- sub("\\_.*", "", input$current_edges_id2)
@@ -352,9 +385,13 @@ server <- function(input, output, session) {
     }
   })
   
-  # Update: Graph 3 Description Box from Issue-Issue Edge
+  # Update: Graph 3 Description Box 
   output$description3 <- renderUI({
-    if(!is.null(input$current_node_id3)) actordescription[actordescription$actor_list == input$current_node_id3, 3]
+    if(!is.null(input$current_node_id3))
+    {
+      if(input$current_node_id3 %in% uniquePolicies) issuedescription[issuedescription$abbr_issue == input$current_node_id3, 3]
+      else actordescription[actordescription$actor_list == input$current_node_id3, 3]
+    }
     else if(!is.null(input$current_edges_id3)) 
     {
       node1 <- sub("\\_.*", "", input$current_edges_id3)
