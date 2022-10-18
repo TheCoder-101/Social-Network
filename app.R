@@ -60,14 +60,22 @@ allEdges <- data.frame(
   id = c(paste(nodeEdgeFrom, nodeEdgeTo, 1:edgeLength, sep="_"))
 )
 
+# -visLegend Edges-
+legendEdges1 <- data.frame(color = c("gray", "turquoise", "lightgreen"), label = c("Organization-Organization", "Organization-Issue", "Issue-Issue"))
+
+# -Shiny UI Variables-
+abbrevNames <- c("N/A", actordescription[,2], issuedescription[,2])
+fullNames <- c("N/A", actordescription[,1], issuedescription[,1])
+names(abbrevNames)<-fullNames
+
 # -Shiny UI-
 ui <- dashboardPage(
   dashboardHeader(title = "Network Tool"),
   dashboardSidebar(
     sidebarMenu(id = "sidebar", style = "position:fixed;width:220px;",
-      
+
       # -Tab 1-
-      selectInput("filter", "Select Organization or Issue:", rbind(c("N/A"), allNodes$id)),
+      selectInput("filter", "Select Organization or Issue:", c(("N/A"), abbrevNames)),
       checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
       checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
       hr(),
@@ -76,33 +84,41 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     
-    # -Row 1-
+    # -Row 0-
     fluidRow(
-      column(width = 3, 
-       box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
-       box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
-      ),
-      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
-      box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
+      box(title = "Update Your Data", width = 12, 
+          a("FAQ Page", href = "https://www.google.com/", target="_blank"),
+          a("Google Form", href = "https://www.youtube.com/", target="_blank")
+        )
     ),
     
     # -Row 2-
     fluidRow(
       column(width = 3,
-       box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
-       box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
+             box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
+             box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
       box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2'))
     ),
     
+    # -Row 1-
+    fluidRow(
+      column(width = 3, 
+             box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
+             box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
+      ),
+      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
+      box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
+    ),
+    
     # -Row 3-
     fluidRow(
       column(width = 3,
-       box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
-       box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
-       box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
-       box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
+             box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
+             box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
+             box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
+             box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
       ),
       box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
       box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
@@ -122,24 +138,26 @@ server <- function(input, output, session) {
     if(!input$checkIss) nodes1 <- nodes1[nodes1$id %in% uniqueOrganizations, ]
     
     visNetwork(nodes1, allEdges, background = "white") %>%
-    
-    # -Node Groups-
-    visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
-    visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
-    
-    # -Current Node/Edge Variables-
-    visEvents(select = "function(data) {
-    Shiny.onInputChange('current_node_id1', data.nodes);
-    Shiny.onInputChange('current_edges_id1', data.edges);
-    ;}")  %>%
-    
-    # -Modifications-
-    visNodes(size = 10) %>%
-    visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
-    visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
-    visInteraction(dragNodes = FALSE) %>%
-    visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical", hover = FALSE)) %>%
-    visConfigure(enabled = FALSE) # DEVS
+      
+      # -Node Groups-
+      visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
+      visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
+      
+      # -Current Node/Edge Variables-
+      visEvents(select = "function(data) {
+      Shiny.onInputChange('current_node_id1', data.nodes);
+      Shiny.onInputChange('current_edges_id1', data.edges);
+      ;}")  %>%
+      
+      #visLegend(addEdges = legendEdges1) %>%
+      
+      # -Modifications-
+      visNodes(size = 10) %>%
+      visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
+      visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
+      visInteraction(dragNodes = FALSE) %>%
+      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical", hover = FALSE)) %>%
+      visConfigure(enabled = FALSE) # DEVS
   })
   
   # -Tab 2 Graph-
@@ -161,24 +179,24 @@ server <- function(input, output, session) {
       
       visNetwork(nodes2, allEdges, background = "white") %>%
         
-      # -Node Groups-
-      visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
-      visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
-      visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
-      
-      # -Current Node/Edge Variables-
-      visEvents(select = "function(data) {
-      Shiny.onInputChange('current_node_id2', data.nodes);
-      Shiny.onInputChange('current_edges_id2', data.edges);
-      ;}")  %>%
+        # -Node Groups-
+        visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
+        visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
+        visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
         
-      # -Modifications-
-      visNodes(size = 10) %>%
-      visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
-      visIgraphLayout(randomSeed = 1, layout = "layout_nicely") %>%
-      visInteraction(dragNodes = FALSE) %>%
-      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical")) %>%
-      visConfigure(enabled = FALSE) # DEVS
+        # -Current Node/Edge Variables-
+        visEvents(select = "function(data) {
+        Shiny.onInputChange('current_node_id2', data.nodes);
+        Shiny.onInputChange('current_edges_id2', data.edges);
+        ;}")  %>%
+        
+        # -Modifications-
+        visNodes(size = 10) %>%
+        visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
+        visIgraphLayout(randomSeed = 1, layout = "layout_nicely") %>%
+        visInteraction(dragNodes = FALSE) %>%
+        visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical")) %>%
+        visConfigure(enabled = FALSE) # DEVS
     }
   })
   
@@ -247,24 +265,24 @@ server <- function(input, output, session) {
       # -Graph-
       visNetwork(nodes3, newEdges, background = "white") %>%
         
-      # -Node Groups-
-      visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
-      visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
-      visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
-      
-      # -Current Node/Edge Variables-
-      visEvents(select = "function(data) {
+        # -Node Groups-
+        visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
+        visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
+        visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
+        
+        # -Current Node/Edge Variables-
+        visEvents(select = "function(data) {
       Shiny.onInputChange('current_node_id3', data.nodes);
       Shiny.onInputChange('current_edges_id3', data.edges);
       ;}")  %>%
-      
-      # -Modifications-
-      visNodes(size = 10) %>%
-      visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
-      visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
-      visInteraction(dragNodes = FALSE) %>%
-      visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical"), manipulation = TRUE) %>%
-      visConfigure(enabled = FALSE) # DEVS
+        
+        # -Modifications-
+        visNodes(size = 10) %>%
+        visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
+        visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
+        visInteraction(dragNodes = FALSE) %>%
+        visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical"), manipulation = TRUE) %>%
+        visConfigure(enabled = FALSE) # DEVS
     }
   })
   
