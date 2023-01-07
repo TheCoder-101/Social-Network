@@ -60,74 +60,130 @@ allEdges <- data.frame(
   id = c(paste(nodeEdgeFrom, nodeEdgeTo, 1:edgeLength, sep="_"))
 )
 
-# -visLegend Edges-
-legendEdges1 <- data.frame(color = c("gray", "turquoise", "lightgreen"), label = c("Organization-Organization", "Organization-Issue", "Issue-Issue"))
+# -URLS-
+dataURL = a("Data Entry Form", target="_blank", href="https://www.google.com/")
+channnelURL = a("Youtube Channel", target="_blank", href="https://www.google.com/")
+coverVidURL = '<iframe width="825" height="400" src="https://www.youtube.com/embed/a7h6gI-yNpo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+imageURL = '<center><img width="150" height="150" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/GraphQL_Logo.svg/1200px-GraphQL_Logo.svg.png"></center>'
 
 # -Shiny UI Variables-
 abbrevNames <- c("N/A", actordescription[,2], issuedescription[,2])
 fullNames <- c("N/A", actordescription[,1], issuedescription[,1])
-names(abbrevNames)<-fullNames
+names(abbrevNames) <- fullNames
+
+abbrevNames2 <- c("N/A", actordescription[,2])
+fullNames2 <- c("N/A", actordescription[,1])
+names(abbrevNames2) <- fullNames2
 
 # -Shiny UI-
 ui <- dashboardPage(
-  dashboardHeader(title = "Network Tool"),
+  dashboardHeader(title = "Network of Stakeholders", titleWidth = 250),
   dashboardSidebar(
-    sidebarMenu(id = "sidebar", style = "position:fixed;width:220px;",
-
-      # -Tab 1-
+    sidebarMenu(id = "sidebar",
+                
+      # Tabs List
+      menuItem("Cover Page", tabName = "coverpage"),
+      menuItem("Networks Tab", tabName = "networkstab"),
+      menuItem("Actor Profiles", tabName = "actorprofiletab")
+    ),
+    
+    # Cover Page
+    conditionalPanel(
+      condition = "input.sidebar == 'coverpage'"
+    ),
+    
+    # Network Tab
+    conditionalPanel(style = "position:fixed;width:230px;",
+      condition = "input.sidebar == 'networkstab'",
       selectInput("filter", "Select Organization or Issue:", c(("N/A"), abbrevNames)),
       checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
       checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
       hr(),
       actionButton("reset", "Reset Networks")
+    ),
+    
+    # Actor Profile Tab
+    conditionalPanel(style = "position:fixed;width:230px;",
+     condition = "input.sidebar == 'actorprofiletab'",
+      selectInput("filterClone", "Select Organization or Issue:", c(("N/A"), abbrevNames2))
     )
   ),
   dashboardBody(
-    
-    # -Row 0-
-    fluidRow(
-      box(title = "Update Your Data", width = 12, 
-          a("FAQ Page", href = "https://www.google.com/", target="_blank"),
-          a("Google Form", href = "https://www.youtube.com/", target="_blank")
+    tabItems(
+      tabItem(tabName = "coverpage",
+        # -Row 1-
+        fluidRow(
+          titlePanel(div(h1("Network of Stakeholders", align = "center"), HTML(imageURL)))
+        ),
+        fluidRow(
+          column(8, align = "center", offset = 2, box(title = "About Network of Stakeholders", width = 12, "<Paragraph>"))
+        ),
+        fluidRow(
+          column(width = 6, box(title = "Network Analysis FAQ", width = NULL, "<Paragraph>")),
+          column(width = 6, HTML(coverVidURL))
+        ),
+        fluidRow(
+          column(8, align = "center", offset = 2, box(title = "Links", width = NULL, HTML(paste(dataURL, channnelURL, sep = '<br/>'))))
+        ),
+        fluidRow(
+          column(8, align = "center", offset = 2, box(title = "Bios", width = NULL, "<Paragraph>"))
+        ),
+        fluidRow(
+          column(width = 6, align = "center", offset = 3, HTML(coverVidURL))
+        ),
+      ),
+      tabItem(tabName = "networkstab",
+        
+        # -Row 2-
+        fluidRow(
+          column(width = 3,
+                 box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
+                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
+          ),
+          box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
+          box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2'))
+        ),
+        
+        # -Row 1-
+        fluidRow(
+          column(width = 3, 
+                 box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
+                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
+          ),
+          box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
+          box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
+        ),
+        
+        # -Row 3-
+        fluidRow(
+          column(width = 3,
+                 box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
+                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
+                 box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
+                 box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
+          ),
+          box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
+          box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
         )
-    ),
-    
-    # -Row 2-
-    fluidRow(
-      column(width = 3,
-             box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
-             box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
       ),
-      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
-      box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2'))
-    ),
-    
-    # -Row 1-
-    fluidRow(
-      column(width = 3, 
-             box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
-             box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
-      ),
-      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
-      box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
-    ),
-    
-    # -Row 3-
-    fluidRow(
-      column(width = 3,
-             box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
-             box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
-             box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
-             box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
-      ),
-      box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
-      box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
+      tabItem(tabName = "actorprofiletab",
+        column(width =3,
+          box(title = "Coordinate Delegate", width = NULL, htmlOutput('coordinatedelegate')),
+          box(title = "Actor Description", width = NULL, htmlOutput('actordescription')),
+          box(title = "Actor Type", width = NULL, htmlOutput('actortype')),
+          box(title = "Actor Website Hyperlinks", width = NULL, htmlOutput('actorwebsite')),
+          box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated'))
+        ),
+        box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table4')),
+        box(width = 6, height = 850, visNetworkOutput("network_proxy_tab4", height = 800))
+      )
     )
   )
 )
 
 # -Shiny Server-
 server <- function(input, output, session) {
+  # --- Sidebar Tab 2 ---
   
   # -Tab 1 Graph-
   output$network_proxy_tab1  <- renderVisNetwork({
@@ -201,7 +257,7 @@ server <- function(input, output, session) {
   })
   
   # - Tab 3 Graph-
-  output$network_proxy_tab3  <- renderVisNetwork({
+  output$network_proxy_tab3 <- renderVisNetwork({
     if(!input$filter == "N/A" & !input$filter == "" & input$filter %in% uniqueOrganizations)
     {
       # -Create Filtered Node Set-
@@ -289,10 +345,11 @@ server <- function(input, output, session) {
   # -Table-
   output$table1 <- DT::renderDataTable(DT::datatable(tableDataFrame$table1, colnames = c("Abbrev.","Name","Type"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11)))
   output$table2 <- DT::renderDataTable(DT::datatable(tableDataFrame$table2, colnames = c("Abbrev.","Name","Type"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11)))
-  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, colnames = c("Abbrev.","Name", "Gaps"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11)))
+  output$table3 <- DT::renderDataTable(DT::datatable(tableDataFrame$table3, colnames = c("Abbrev.","Name", "Gaps"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11, order = list(2, 'desc'))))
+  output$table4 <- DT::renderDataTable(DT::datatable(tableDataFrame$table4, colnames = c("Abbrev.","Name", "Gaps"), rownames = FALSE, selection = 'single', options = list(lengthChange = FALSE, pageLength = 11, order = list(2, 'desc'))))
   
   # Variables
-  currentConnectedNodes <- reactiveValues(N = NULL) # Connected Nodes
+  currentConnectedNodes <- reactiveValues(N = NULL, N2 = NULL) # Connected Nodes
   tableDataFrame <- reactiveValues(table1 = NULL, table2 = NULL, table3 = NULL)
   connectedNodesGraph3 <- reactiveValues(A = NULL, B = NULL) # A: Issues, B: Organizations
   
@@ -467,6 +524,133 @@ server <- function(input, output, session) {
     updateSelectInput(session, "checkIss", selected = TRUE)
     visNetworkProxy("network_proxy_tab1") %>%
       visFit(animation = list(duration=650))
+  })
+  
+  # --- Sidebar Tab 3 ---
+  
+  # Match filter inputs between Sidebar Tab 2&3
+  observeEvent(input$filter, {
+    if(any(uniqueOrganizations==input$filter)) {
+      updateSelectInput(session, "filterClone", selected = input$filter)
+    }
+  })
+  
+  output$coordinatedelegate <- renderUI({
+    actordescription[actordescription$actor_list %in% input$filterClone, "coordination_delegate"]
+  })
+  
+  output$actordescription <- renderUI({
+    actordescription[actordescription$actor_list %in% input$filterClone, "desc"]
+  })
+  
+  output$actortype <- renderUI({
+    actordescription[actordescription$actor_list %in% input$filterClone, "type"]
+  })
+  
+  output$actorwebsite <- renderUI({
+    actordescription[actordescription$actor_list %in% input$filterClone, "link"]
+  })
+  
+  output$lastupdated <- renderUI({
+    actordescription[actordescription$actor_list %in% input$filterClone, "last_updated"]
+  })
+  
+  output$network_proxy_tab4 <- renderVisNetwork({
+    if(!input$filterClone == "N/A" & !input$filterClone == "" & input$filterClone %in% uniqueOrganizations)
+    {
+      
+      # -Create Filtered Node Set-
+      connectedNodesa <- allNodes[allNodes$id %in% currentConnectedNodes$N2, ]
+      connectedIssuesA <- NULL
+      
+      if(!input$issueFilter == "N/A") connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% input$issueFilter, ] 
+      else connectedIssuesA <- connectedNodesa[connectedNodesa$id %in% uniquePolicies, ] 
+      
+      orgsWithIssuesb <- vector() # Vector of all Instances of Organizations with Issues in [connectedIssuesA]
+      for(x in 1:length(connectedIssuesA$id))
+      {
+        orgsWithIssuesb <- append(orgsWithIssuesb, actorissueEdgelist[connectedIssuesA$id[x] == actorissueEdgelist[2], 1])
+      }
+      
+      if(!input$orgFilter == "N/A") orgsWithIssuesb <- orgsWithIssuesb[orgsWithIssuesb %in% input$orgFilter]
+      OrgByIssueCount <- as.data.frame(table(orgsWithIssuesb)) # For Graph 3 Table
+      
+      orgsWithIssuesb <- unique(orgsWithIssuesb) # [orgsWithIssuesb] filters to unique Instances of Organizations
+      orgsWithIssuesb <- orgsWithIssuesb[orgsWithIssuesb != input$filterClone]
+      
+      orgNodesWithIssuesB <- data.frame( # Organization Nodes
+        id = orgsWithIssuesb,   
+        label = orgsWithIssuesb,
+        group = "Organization"
+      )
+      
+      selectedNodeC <- data.frame( # Selected Node
+        id = input$filterClone, 
+        label = input$filterClone, 
+        group = "Selected"
+      )
+      
+      connectedNodesGraph3$A <- connectedIssuesA$id
+      connectedNodesGraph3$B <- orgNodesWithIssuesB$id
+      nodes3 <- rbind(connectedIssuesA, orgNodesWithIssuesB, selectedNodeC)
+      
+      if(!input$checkOrg) nodes3 <- nodes3[nodes3$id %in% uniquePolicies, ]
+      if(!input$checkIss) nodes3 <- nodes3[nodes3$id %in% uniqueOrganizations, ]
+      
+      # -Create New Edge Set-
+      connectedOrgEdges <- connectedNodesa[connectedNodesa$id %in% uniqueOrganizations, ]
+      unconnectedOrgEdges <- orgNodesWithIssuesB[!(orgNodesWithIssuesB$id %in% connectedOrgEdges$id), ]
+      
+      newEdges <- data.frame(
+        from = c(rep(input$filterClone, length(connectedOrgEdges$id)+length(unconnectedOrgEdges$id)), actorissueEdgelist[,1]),
+        to = c(connectedOrgEdges$id, unconnectedOrgEdges$id, actorissueEdgelist[,2]),
+        color = c(
+          rep("darkgreen", length(connectedOrgEdges$id)),
+          rep("red", length(unconnectedOrgEdges$id)),
+          rep("lightgreen", length(actorissueEdgelist[,1]))
+        )
+      )
+      
+      # -Table-
+      temp <- OrgByIssueCount[OrgByIssueCount$orgsWithIssuesb %in% unconnectedOrgEdges$id,]
+      actorNameCol <- actordescription[actordescription$actor_list %in% temp$orgsWithIssuesb, 1:2]
+      temp <- merge(temp, actorNameCol, by.x = "orgsWithIssuesb", by.y = 'actor_list', all = TRUE)
+      tableDataFrame$table4 <- temp[, c(1,3,2)]
+      
+      # -Graph-
+      visNetwork(nodes3, newEdges, background = "white") %>%
+        
+        # -Node Groups-
+        visGroups(groupname = "Organization", color = list(border = "blue", background = "blue", highlight = "black")) %>%
+        visGroups(groupname = "Issue", color = list(border = "green", background = "green", highlight = "black")) %>%
+        visGroups(groupname = "Selected", color = list(border = "yellow", background = "yellow", highlight = "black")) %>%
+        
+        # -Current Node/Edge Variables-
+        visEvents(select = "function(data) {
+      Shiny.onInputChange('current_node_id3', data.nodes);
+      Shiny.onInputChange('current_edges_id3', data.edges);
+      ;}")  %>%
+        
+        # -Modifications-
+        visNodes(size = 10) %>%
+        visEdges(smooth = list(enabled = TRUE, type = "horizontal")) %>%
+        visIgraphLayout(randomSeed = 1, layout = "layout_in_circle") %>%
+        visInteraction(dragNodes = FALSE) %>%
+        visOptions(highlightNearest = list(enabled = TRUE, degree = 1, algorithm = "hierarchical"), manipulation = TRUE) %>%
+        visConfigure(enabled = FALSE) # DEVS
+    }
+  })
+  
+  # Set: [currentConnectedNodes]
+  observe({
+    if(length(input$filterClone) == 1 & !input$filterClone == "N/A") {
+      connectedNodesTo <- nodeEdgeTo[nodeEdgeFrom %in% input$filterClone]
+      connectedNodesFrom <- nodeEdgeFrom[nodeEdgeTo %in% input$filterClone]
+      currentConnectedNodes$N2 <- unique(c(connectedNodesTo, connectedNodesFrom))
+    }
+    else {
+      currentConnectedNodes$N2 <- NULL
+    }
   })
 }
 # -Run-
