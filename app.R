@@ -373,7 +373,7 @@ server <- function(input, output, session) {
     actorNameCol <- actordescription[actordescription$actor_list %in% allNodes$id, c(1:2,4)]
     issueNameCol <- issuedescription[issuedescription$abbr_issue %in% allNodes$id, 1:2]
     if(nrow(issueNameCol) != 0) issueNameCol['type'] <- NA
-    colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
+    colnames(issueNameCol) <- c('name', 'actor_list', 'type')
     temp <- rbind(actorNameCol, issueNameCol)
     
     tableDataFrame$table1 <- temp[, c(2,1,3)]
@@ -391,7 +391,7 @@ server <- function(input, output, session) {
       issueNameCol <- issuedescription[issuedescription$abbr_issue %in% nodesAB$id, 1:2]
       if(nrow(issueNameCol) != 0){
         issueNameCol['type'] <- NA
-        colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
+        colnames(issueNameCol) <- c('name', 'actor_list', 'type')
       } 
       
       temp <- rbind(actorNameCol, issueNameCol)
