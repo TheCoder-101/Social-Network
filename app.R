@@ -174,7 +174,7 @@ ui <- dashboardPage(
           box(title = "Actor Website Hyperlinks", width = NULL, htmlOutput('actorwebsite')),
           box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated'))
         ),
-        box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table4')),
+        box(title = "Recommended Partners", width = 3, DT::dataTableOutput('table4')),
         box(width = 6, height = 850, visNetworkOutput("network_proxy_tab4", height = 800))
       )
     )
