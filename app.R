@@ -60,11 +60,14 @@ allEdges <- data.frame(
   id = c(paste(nodeEdgeFrom, nodeEdgeTo, 1:edgeLength, sep="_"))
 )
 
-# -URLS-
-dataURL = a("Data Entry Form", target="_blank", href="https://www.google.com/")
+# -Media-
+dataURL = a("Data Entry Form", target="_blank", href="https://osu.az1.qualtrics.com/jfe/form/SV_cBxbSrIhRLx77lY")
 channnelURL = a("Youtube Channel", target="_blank", href="https://www.google.com/")
 coverVidURL = '<iframe width="825" height="400" src="https://www.youtube.com/embed/a7h6gI-yNpo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
-imageURL = '<center><img width="150" height="150" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/GraphQL_Logo.svg/1200px-GraphQL_Logo.svg.png"></center>'
+imageURL = '<center><img src="https://byrd.osu.edu/sites/default/files/styles/news_and_events_image/public/2022-02/osu-byrd-stacked-black-rgb_whitebg.png?h=aa15e8f5&itok=CCkxGql6
+"></center>'
+legendURL = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/NoS_Tool_Legend.png"
+bioText = ""
 
 # -Shiny UI Variables-
 abbrevNames <- c("N/A", actordescription[,2], issuedescription[,2])
@@ -83,7 +86,7 @@ ui <- dashboardPage(
                 
       # Tabs List
       menuItem("Cover Page", tabName = "coverpage"),
-      menuItem("Networks Tab", tabName = "networkstab"),
+      menuItem("Networks", tabName = "networkstab"),
       menuItem("Actor Profiles", tabName = "actorprofiletab")
     ),
     
@@ -95,7 +98,7 @@ ui <- dashboardPage(
     # Network Tab
     conditionalPanel(style = "position:fixed;width:230px;",
       condition = "input.sidebar == 'networkstab'",
-      selectInput("filter", "Select Organization or Issue:", c(("N/A"), abbrevNames)),
+      selectInput("filter", "Select Organization or Issue:", c(("N/A"), abbrevNames), selected = "N/A"),
       checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
       checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
       hr(),
@@ -105,7 +108,7 @@ ui <- dashboardPage(
     # Actor Profile Tab
     conditionalPanel(style = "position:fixed;width:230px;",
      condition = "input.sidebar == 'actorprofiletab'",
-      selectInput("filterClone", "Select Organization or Issue:", c(("N/A"), abbrevNames2))
+      selectInput("filterClone", "Select Organization or Issue:", c(("N/A"), abbrevNames2), selected = "")
     )
   ),
   dashboardBody(
@@ -126,7 +129,7 @@ ui <- dashboardPage(
           column(8, align = "center", offset = 2, box(title = "Links", width = NULL, HTML(paste(dataURL, channnelURL, sep = '<br/>'))))
         ),
         fluidRow(
-          column(8, align = "center", offset = 2, box(title = "Bios", width = NULL, "<Paragraph>"))
+          column(8, align = "center", offset = 2, box(title = "Bios", width = NULL, bioText))
         ),
         fluidRow(
           column(width = 6, align = "center", offset = 3, HTML(coverVidURL))
@@ -138,17 +141,19 @@ ui <- dashboardPage(
         fluidRow(
           column(width = 3,
                  box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
-                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2'))
+                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2')),
+                 tags$img(src = legendURL, width = "100%", height = "100%")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
-          box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2'))
+          box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2')),
         ),
         
         # -Row 1-
         fluidRow(
           column(width = 3, 
                  box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
-                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1'))
+                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1')),
+                 tags$img(src = legendURL, width = "100%", height = "100%")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
           box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
@@ -160,22 +165,24 @@ ui <- dashboardPage(
                  box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
                  box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
                  box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
-                 box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A"))
+                 box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A")),
+                 tags$img(src = legendURL, width = "100%", height = "100%")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
           box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
         )
       ),
       tabItem(tabName = "actorprofiletab",
-        column(width =3,
+        column(width = 3,
           box(title = "Coordinate Delegate", width = NULL, htmlOutput('coordinatedelegate')),
           box(title = "Actor Description", width = NULL, htmlOutput('actordescription')),
           box(title = "Actor Type", width = NULL, htmlOutput('actortype')),
-          box(title = "Actor Website Hyperlinks", width = NULL, htmlOutput('actorwebsite')),
-          box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated'))
+          box(title = "Actor Website Hyperlinks", width = NULL, uiOutput('actorwebsite')),
+          box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated')),
+          box(title = "Image", width = NULL, htmlOutput('logo'))
         ),
-        box(title = "Recommended Partners", width = 3, DT::dataTableOutput('table4')),
-        box(width = 6, height = 850, visNetworkOutput("network_proxy_tab4", height = 800))
+        box(title = "Gaps Network Table", DT::dataTableOutput('table4')),
+        visNetworkOutput("network_proxy_tab4", height = 0)
       )
     )
   )
@@ -373,7 +380,7 @@ server <- function(input, output, session) {
     actorNameCol <- actordescription[actordescription$actor_list %in% allNodes$id, c(1:2,4)]
     issueNameCol <- issuedescription[issuedescription$abbr_issue %in% allNodes$id, 1:2]
     if(nrow(issueNameCol) != 0) issueNameCol['type'] <- NA
-    colnames(issueNameCol) <- c('name', 'actor_list', 'type')
+    colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
     temp <- rbind(actorNameCol, issueNameCol)
     
     tableDataFrame$table1 <- temp[, c(2,1,3)]
@@ -391,7 +398,7 @@ server <- function(input, output, session) {
       issueNameCol <- issuedescription[issuedescription$abbr_issue %in% nodesAB$id, 1:2]
       if(nrow(issueNameCol) != 0){
         issueNameCol['type'] <- NA
-        colnames(issueNameCol) <- c('name', 'actor_list', 'type')
+        colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
       } 
       
       temp <- rbind(actorNameCol, issueNameCol)
@@ -548,11 +555,22 @@ server <- function(input, output, session) {
   })
   
   output$actorwebsite <- renderUI({
-    actordescription[actordescription$actor_list %in% input$filterClone, "link"]
+    if(input$filterClone != "N/A")
+    {
+      link <- actordescription[actordescription$actor_list %in% input$filterClone, "link"]
+      tagList(a(link, href=link, style = "word-wrap: break-word;"))
+    }
+    else
+    {}
   })
   
   output$lastupdated <- renderUI({
     actordescription[actordescription$actor_list %in% input$filterClone, "last_updated"]
+  })
+  
+  output$logo <- renderText({
+    link <- actordescription[actordescription$actor_list %in% input$filterClone, "logo"]
+    paste(c('<img width = 100% height = 100% src="', link, '">'))
   })
   
   output$network_proxy_tab4 <- renderVisNetwork({
