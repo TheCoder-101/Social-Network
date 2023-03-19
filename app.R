@@ -64,7 +64,7 @@ allEdges <- data.frame(
 dataURL = a("Data Entry Form", target="_blank", href="https://osu.az1.qualtrics.com/jfe/form/SV_cBxbSrIhRLx77lY")
 channnelURL = a("Youtube Channel", target="_blank", href="https://www.google.com/")
 coverVidURL = '<iframe width="825" height="400" src="https://www.youtube.com/embed/a7h6gI-yNpo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
-imageURL = '<center><img src="https://byrd.osu.edu/sites/default/files/styles/news_and_events_image/public/2022-02/osu-byrd-stacked-black-rgb_whitebg.png?h=aa15e8f5&itok=CCkxGql6
+imageURL = '<center><img width="30%" height="30%" src="https://byrd.osu.edu/sites/default/files/styles/news_and_events_image/public/2022-02/osu-byrd-stacked-black-rgb_whitebg.png?h=aa15e8f5&itok=CCkxGql6
 "></center>'
 legendURL = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/NoS_Tool_Legend.png"
 bioText = ""
@@ -82,21 +82,21 @@ names(abbrevNames2) <- fullNames2
 ui <- dashboardPage(
   dashboardHeader(title = "Network of Stakeholders", titleWidth = 250),
   dashboardSidebar(
-    sidebarMenu(id = "sidebar",
+    sidebarMenu(id = "sidebar", style = "position: fixed;",
                 
       # Tabs List
-      menuItem("Cover Page", tabName = "coverpage"),
+      menuItem("Home", tabName = "coverpage"),
       menuItem("Networks", tabName = "networkstab"),
       menuItem("Actor Profiles", tabName = "actorprofiletab")
     ),
     
     # Cover Page
-    conditionalPanel(
+    conditionalPanel(style = "position:fixed; width:230px; margin-top:125px;",
       condition = "input.sidebar == 'coverpage'"
     ),
     
     # Network Tab
-    conditionalPanel(style = "position:fixed;width:230px;",
+    conditionalPanel(style = "position:fixed; width:230px; margin-top:125px;",
       condition = "input.sidebar == 'networkstab'",
       selectInput("filter", "Select Organization or Issue:", c(("N/A"), abbrevNames), selected = "N/A"),
       checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
@@ -106,12 +106,13 @@ ui <- dashboardPage(
     ),
     
     # Actor Profile Tab
-    conditionalPanel(style = "position:fixed;width:230px;",
+    conditionalPanel(style = "position:fixed; width:230px; margin-top:125px;",
      condition = "input.sidebar == 'actorprofiletab'",
       selectInput("filterClone", "Select Organization or Issue:", c(("N/A"), abbrevNames2), selected = "")
     )
   ),
   dashboardBody(
+    tags$head(tags$style(HTML('.content-wrapper { overflow: auto; }'))),
     tabItems(
       tabItem(tabName = "coverpage",
         # -Row 1-
@@ -139,10 +140,11 @@ ui <- dashboardPage(
         
         # -Row 2-
         fluidRow(
-          column(width = 3,
+          column(width = 3, align = "center",
                  box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
                  box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2')),
-                 tags$img(src = legendURL, width = "100%", height = "100%")
+                 tags$h1("Legend", width = "50%", height = "50%", align = "center"),
+                 tags$img(src = legendURL, width = "75%", height = "75%", align = "center")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
           box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2')),
@@ -150,10 +152,11 @@ ui <- dashboardPage(
         
         # -Row 1-
         fluidRow(
-          column(width = 3, 
+          column(width = 3, align = "center",
                  box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
                  box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1')),
-                 tags$img(src = legendURL, width = "100%", height = "100%")
+                 tags$h1("Legend", width = "50%", height = "50%", align = "center"),
+                 tags$img(src = legendURL, width = "75%", height = "75%", align = "center")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
           box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
@@ -161,27 +164,28 @@ ui <- dashboardPage(
         
         # -Row 3-
         fluidRow(
-          column(width = 3,
-                 box(title = "Instructions: Gaps Network", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
+          column(width = 3, align = "center",
+                 box(title = "Instructions: Recommended Partners", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
                  box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
                  box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
                  box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A")),
-                 tags$img(src = legendURL, width = "100%", height = "100%")
+                 tags$h1("Legend", width = "50%", height = "50%", align = "center"),
+                 tags$img(src = legendURL, width = "75%", height = "75%", align = "center")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
-          box(title = "Gaps Network Table", width = 3, DT::dataTableOutput('table3'))
+          box(title = "Recommended Partners Table", width = 3, DT::dataTableOutput('table3'))
         )
       ),
       tabItem(tabName = "actorprofiletab",
-        column(width = 3,
-          box(title = "Coordinate Delegate", width = NULL, htmlOutput('coordinatedelegate')),
+        column(width = 5,
+          box(title = "Coordination Delegate", width = NULL, htmlOutput('coordinatedelegate')),
           box(title = "Actor Description", width = NULL, htmlOutput('actordescription')),
           box(title = "Actor Type", width = NULL, htmlOutput('actortype')),
           box(title = "Actor Website Hyperlinks", width = NULL, uiOutput('actorwebsite')),
           box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated')),
           box(title = "Image", width = NULL, htmlOutput('logo'))
         ),
-        box(title = "Gaps Network Table", DT::dataTableOutput('table4')),
+        box(width = 6, title = "Recommended Partners Table", DT::dataTableOutput('table4')),
         visNetworkOutput("network_proxy_tab4", height = 0)
       )
     )
