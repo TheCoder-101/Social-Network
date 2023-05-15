@@ -1,10 +1,11 @@
-# - Original A-
+# - Original -
 
 # -Libraries-
 library(shiny)
 library(shinydashboard)
 library(visNetwork)
 library(igraph)
+library(tidyverse)
 
 # -Data-
 actoractorEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/epn_aa_edgelist.csv"), header=TRUE)
@@ -12,6 +13,7 @@ actorissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/A
 issueissueEdgelist <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/ii_edgelist_weights.csv"), header=TRUE)
 actordescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/epn_actorattributes.csv"), header=TRUE)
 issuedescription <- read.csv(url("https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/epn_issueattributes.csv"), header=TRUE)
+names(issuedescription) <- c('full_issue', 'abbr_issue', 'projects')
 
 # -Variables-
 uniqueOrganizations <- unique(unlist(actorissueEdgelist[1], use.names=FALSE)) # Length: 100
@@ -63,9 +65,8 @@ allEdges <- data.frame(
 # -Media-
 dataURL = a("Data Entry Form", target="_blank", href="https://osu.az1.qualtrics.com/jfe/form/SV_cBxbSrIhRLx77lY")
 channnelURL = a("Youtube Channel", target="_blank", href="https://www.google.com/")
-coverVidURL = '<iframe width="825" height="400" src="https://www.youtube.com/embed/a7h6gI-yNpo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
-imageURL = '<center><img width="30%" height="30%" src="https://byrd.osu.edu/sites/default/files/styles/news_and_events_image/public/2022-02/osu-byrd-stacked-black-rgb_whitebg.png?h=aa15e8f5&itok=CCkxGql6
-"></center>'
+coverVidURL = "https://www.youtube.com/embed/a7h6gI-yNpo"
+imageURL = "https://students.cfaes.ohio-state.edu/sites/ap/files/events/SENR_CFAES.jpg"
 legendURL = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/NoS_Tool_Legend.png"
 bioText = ""
 
@@ -99,8 +100,8 @@ ui <- dashboardPage(
     conditionalPanel(style = "position:fixed; width:230px; margin-top:125px;",
       condition = "input.sidebar == 'networkstab'",
       selectInput("filter", "Select Organization or Issue:", c(("N/A"), abbrevNames), selected = "N/A"),
-      checkboxInput("checkOrg", "Show Organizations", c(TRUE, FALSE)),
-      checkboxInput("checkIss", "Show Issues", c(TRUE, FALSE)),
+      checkboxInput("checkOrg", "Show Organizations"),
+      checkboxInput("checkIss", "Show Issues"),
       hr(),
       actionButton("reset", "Reset Networks")
     ),
@@ -117,14 +118,15 @@ ui <- dashboardPage(
       tabItem(tabName = "coverpage",
         # -Row 1-
         fluidRow(
-          titlePanel(div(h1("Network of Stakeholders", align = "center"), HTML(imageURL)))
+          titlePanel(div(h1("Network of Stakeholders", align = "center"), 
+          tags$div(style = "display: flex; justify-content: center", tags$img(src = imageURL, width = "50%", height = "50%"))))
         ),
         fluidRow(
           column(8, align = "center", offset = 2, box(title = "About Network of Stakeholders", width = 12, "<Paragraph>"))
         ),
         fluidRow(
           column(width = 6, box(title = "Network Analysis FAQ", width = NULL, "<Paragraph>")),
-          column(width = 6, HTML(coverVidURL))
+          column(width = 6, box(tags$iframe(src = coverVidURL, width = "100%", height = 300), width = NULL, height = 325))
         ),
         fluidRow(
           column(8, align = "center", offset = 2, box(title = "Links", width = NULL, HTML(paste(dataURL, channnelURL, sep = '<br/>'))))
@@ -133,7 +135,7 @@ ui <- dashboardPage(
           column(8, align = "center", offset = 2, box(title = "Bios", width = NULL, bioText))
         ),
         fluidRow(
-          column(width = 6, align = "center", offset = 3, HTML(coverVidURL))
+          column(width = 6, align = "center", box(tags$iframe(src = coverVidURL, width = "100%", height = 300), width = NULL, height = 325))
         ),
       ),
       tabItem(tabName = "networkstab",
@@ -178,12 +180,12 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "actorprofiletab",
         column(width = 5,
+          box(title = "Image", width = NULL, htmlOutput('logo')),
           box(title = "Coordination Delegate", width = NULL, htmlOutput('coordinatedelegate')),
           box(title = "Actor Description", width = NULL, htmlOutput('actordescription')),
           box(title = "Actor Type", width = NULL, htmlOutput('actortype')),
           box(title = "Actor Website Hyperlinks", width = NULL, uiOutput('actorwebsite')),
-          box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated')),
-          box(title = "Image", width = NULL, htmlOutput('logo'))
+          box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated'))
         ),
         box(width = 6, title = "Recommended Partners Table", DT::dataTableOutput('table4')),
         visNetworkOutput("network_proxy_tab4", height = 0)
@@ -229,7 +231,7 @@ server <- function(input, output, session) {
   
   # -Tab 2 Graph-
   output$network_proxy_tab2 <- renderVisNetwork({
-    if(!input$filter == "N/A" & !input$filter == "")
+    if(identical(!input$filter == "N/A", !input$filter == ""))
     {
       # -Create Filtered Node Set-
       connectedNodesA <- allNodes[allNodes$id %in% currentConnectedNodes$N, ]
@@ -269,7 +271,7 @@ server <- function(input, output, session) {
   
   # - Tab 3 Graph-
   output$network_proxy_tab3 <- renderVisNetwork({
-    if(!input$filter == "N/A" & !input$filter == "" & input$filter %in% uniqueOrganizations)
+    if(identical(!input$filter == "N/A", !input$filter == "", input$filter %in% uniqueOrganizations))
     {
       # -Create Filtered Node Set-
       connectedNodesa <- allNodes[allNodes$id %in% currentConnectedNodes$N, ]
@@ -369,7 +371,7 @@ server <- function(input, output, session) {
   
   # Set: [currentConnectedNodes]
   observe({
-    if(length(input$filter) == 1 & !input$filter == "N/A") {
+    if(identical(length(input$filter) == 1, !input$filter == "N/A")) {
       connectedNodesTo <- nodeEdgeTo[nodeEdgeFrom %in% input$filter]
       connectedNodesFrom <- nodeEdgeFrom[nodeEdgeTo %in% input$filter]
       currentConnectedNodes$N <- unique(c(connectedNodesTo, connectedNodesFrom))
@@ -385,14 +387,14 @@ server <- function(input, output, session) {
     issueNameCol <- issuedescription[issuedescription$abbr_issue %in% allNodes$id, 1:2]
     if(nrow(issueNameCol) != 0) issueNameCol['type'] <- NA
     colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
-    temp <- rbind(actorNameCol, issueNameCol)
+    temp <- bind_rows(actorNameCol, issueNameCol)
     
     tableDataFrame$table1 <- temp[, c(2,1,3)]
   })
   
   # Set: [tableDataFrame$table2]
   observe({
-    if(length(input$filter) == 1 & !input$filter == "N/A") {
+    if(identical(length(input$filter) == 1, !input$filter == "N/A")) {
       nodesA <- allNodes[allNodes$id %in% currentConnectedNodes$N, ]
       nodesB <- data.frame(id = input$filter, label = input$filter, group = "Selected")
       nodesAB <- rbind(nodesB, nodesA)
@@ -405,7 +407,7 @@ server <- function(input, output, session) {
         colnames(issueNameCol) <- c('ï..name', 'actor_list', 'type')
       } 
       
-      temp <- rbind(actorNameCol, issueNameCol)
+      temp <- bind_rows(actorNameCol, issueNameCol)
       tableDataFrame$table2 <- temp[, c(2,1,3)]
     }
     else {
@@ -578,7 +580,7 @@ server <- function(input, output, session) {
   })
   
   output$network_proxy_tab4 <- renderVisNetwork({
-    if(!input$filterClone == "N/A" & !input$filterClone == "" & input$filterClone %in% uniqueOrganizations)
+    if(identical(!input$filterClone == "N/A", !input$filterClone == "", input$filterClone %in% uniqueOrganizations))
     {
       
       # -Create Filtered Node Set-
@@ -665,7 +667,7 @@ server <- function(input, output, session) {
   
   # Set: [currentConnectedNodes]
   observe({
-    if(length(input$filterClone) == 1 & !input$filterClone == "N/A") {
+    if(identical(length(input$filterClone) == 1, !input$filterClone == "N/A")) {
       connectedNodesTo <- nodeEdgeTo[nodeEdgeFrom %in% input$filterClone]
       connectedNodesFrom <- nodeEdgeFrom[nodeEdgeTo %in% input$filterClone]
       currentConnectedNodes$N2 <- unique(c(connectedNodesTo, connectedNodesFrom))
