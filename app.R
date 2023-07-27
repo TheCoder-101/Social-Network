@@ -68,7 +68,6 @@ channnelURL = a("Youtube Channel", target="_blank", href="https://www.google.com
 coverVidURL = "https://www.youtube.com/embed/a7h6gI-yNpo"
 imageURL = "https://students.cfaes.ohio-state.edu/sites/ap/files/events/SENR_CFAES.jpg"
 legendURL = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/NoS_Tool_Legend.png"
-bioText = ""
 
 # -Shiny UI Variables-
 abbrevNames <- c("N/A", actordescription[,2], issuedescription[,2])
@@ -81,7 +80,7 @@ names(abbrevNames2) <- fullNames2
 
 # -Shiny UI-
 ui <- dashboardPage(
-  dashboardHeader(title = "Network of Stakeholders", titleWidth = 250),
+  dashboardHeader(title = "CEN", titleWidth = 250),
   dashboardSidebar(
     sidebarMenu(id = "sidebar", style = "position: fixed;",
                 
@@ -118,76 +117,118 @@ ui <- dashboardPage(
       tabItem(tabName = "coverpage",
         # -Row 1-
         fluidRow(
-          titlePanel(div(h1("Network of Stakeholders", align = "center"), 
-          tags$div(style = "display: flex; justify-content: center", tags$img(src = imageURL, width = "50%", height = "50%"))))
+          titlePanel(div(h1("Columbus Environmental Networking (CEN)", align = "center"),
+                         h4("The Center for Collaborative Networking on Environmental Management in Columbus, Ohio", align = "center"), 
+          tags$div(style = "display: flex; justify-content: center")))
         ),
         fluidRow(
-          column(8, align = "center", offset = 2, box(title = "About Network of Stakeholders", width = 12, "<Paragraph>"))
+          column(width = 8, align = "center", offset = 2, length = 20, 
+                 box(title = "About", width = NULL, 
+                     tags$div(tags$p(style="text-align: left;", "Columbus Environmental Networking (CEN) is a one-stop-shop for enhancing collaboration between environmental organizations and institutions in and around Columbus, Ohio. Designed by Columbus-based graduate students – and with the help of a local high school student to build the software – CEN provides an up-to-date overview of the Columbus environmental landscape.", tags$b("We created CEN with one central objective in mind: to provide up-to-date data to hard-working Columbus environmental professionals to facilitate productive collaboration."), "To do this, we provide you with personalized partnership recommendations and relevant social and ecological data. We strive to support local organization’s collaborative decision-making capacity by providing interactive and personalized recommendations driven by social network data."),
+                              tags$p(style="text-align: left;", "CEN kicked off at the Environmental Professionals Network (EPN) event in September 2022. You can find a recording of the event below on our ‘Home’ page. Nearly 100 Columbus-based environmental professionals attended the event and provided feedback that we have now implemented, resulting in our current version of CEN!"),tags$hr(),
+                              tags$p(style="text-align: left;", "We’re always looking to update our database and add in new organizations to the network. To do so, we need your help. Please help us out by completing a “Data Entry Form” below on this page."),
+                              tags$p(style="text-align: left;", "We hope that you take the time to walk through the instructions on the 'Networks' tab, which we set up to guide you through the data. Please reach out to us if you have any questions, concerns, or ideas! Our contact information is below. Happy networking!")
+                              
+        )))),
+        fluidRow(
+          column(width = 6, align = "center",
+                 box(title = "Frequently Asked Questions", width = NULL, 
+                     tags$div(tags$p(style="text-align: left;", tags$b("Question:"), "What is a social network?", tags$br(), tags$b("Answer:"), "A social network is a way to represent a social system by using 'nodes' to represent social actors, and 'edges' to represent the relationships between them. On this website, we use two different types of nodes: Organizations and Environmental Issues. The edges (lines) that connect nodes to each other represent collaboration between organizations (social-social), an organizating managing an environmental issue (social-ecological), or ecological connectivity between two environmental issues (ecological-ecological)."), tags$hr(),
+                              tags$p(style="text-align: left;", tags$b("Question:"), "Where does this data come from?", tags$br(), tags$b("Answer:"), "All organizational data, including an organization's partners, issues, and description were collected during interviews with an organization representative. All organizations displayed have granted us permission to show their partnership and issue management data."), tags$hr(),
+                              tags$p(style="text-align: left;", tags$b("Question:"), "My organization isn't on here, my organization's data is incorrect, or I want to take my organization off of this site. What do I do?", tags$br(), tags$b("Answer:"), "If you believe your organization's data is incorrect or if you'd like to add your organization to this website, follow the 'Data Entry Form' link in the box below. If you would like to remove your organization from this site, please email us directly at harrisonfried98@gmail.com."), tags$hr(),
+                              tags$p(style="text-align: left;", tags$b("Question:"), "Do I need to be a network expert to use network data?", tags$br(), tags$b("Answer:"), "Not at all! We set up the instructions on the 'Networks' tab in a way that should allow you to follow along. If you need additional help navigating this tool, or brainstorming potential uses, reach out to us and we can set up a time to chat!"), tags$hr(),
+                              tags$p(style="text-align: left;", tags$b("Question:"), "What is a Coordination Delegate, and how do I become one?", tags$br(), tags$b("Answer:"), "A coordination delegate is an employee of an organization who has volunteered themselves to be their organization's 'network representative'. These individuals can serve as the first point of contact when a prospective partner is interested in reaching out and their email is displayed on their organization's profile. You can indicate that you're interested in being your organization's coordination delegate by completing the 'Data Entry Form' below, or by emailing Harrison Fried directly."), tags$hr(),
+                              tags$p(style="text-align: left;", tags$b("Question:"), "So... what's next?", tags$br(), tags$b("Answer:"), "We are always looking to add new features to CEN and we're working on a few at the moment. Stay tuned for updates!")
+                              
+                     ))),
+          column(width = 6, box(title = "CEN at Environmental Professionals Network, 9/22", tags$iframe(src = coverVidURL, width = "100%", height = 750), width = NULL, height = 810))
         ),
         fluidRow(
-          column(width = 6, box(title = "Network Analysis FAQ", width = NULL, "<Paragraph>")),
-          column(width = 6, box(tags$iframe(src = coverVidURL, width = "100%", height = 300), width = NULL, height = 325))
+          column(8, align = "center", offset = 2, box(title = "Update your organization's information!", width = NULL, HTML(paste(dataURL, sep = '<br/>'))))
         ),
         fluidRow(
-          column(8, align = "center", offset = 2, box(title = "Links", width = NULL, HTML(paste(dataURL, channnelURL, sep = '<br/>'))))
+          column(width = 8, align = "center", offset = 2, length = 20, 
+                 box(title = "Contributors", width = NULL, 
+                      tags$div(tags$p(style="text-align: left;", tags$img(src = "https://senr.osu.edu/sites/senr/files/styles/profile_image/public/profile_images/harrison_fried.JPG?itok=nJ7GUden", width = "130px", height = "170px", align = "right"), tags$em("Co-Founder and Main Contact"), tags$br(), tags$b("Harrison Fried, PhD Candidate, The Ohio State University"), tags$br(), "Harrison is passionate about the benefits of strategic collaboration for improving local environmental management. His research focuses on how people work together to solve complex environmental problems, such as climate change adaptation in Columbus. He approaches his research through a social-ecological network lens, focusing on complex social and ecological interconnections that can create barriers or opportunities for resilient management. Harrison plans to continue working on applied research that addresses complexity in modern-day governance through improved access to information. Harrison received his Bachelor of Science and Master of Science in Environment and Natural Resources from Ohio State University’s School of Environment and Natural Resources.", tags$br(), tags$em("Email: harrisonfried98@gmail.com"), tags$hr()), 
+                               tags$p(style="text-align: left;", tags$img(src = "https://senr.osu.edu/sites/senr/files/styles/profile_image/public/profile_images/Kimberly%20Ordonez.JPG?itok=_PocXtDE", width = "130px", height = "170px", align = "right"), tags$em("Co-Founder"), tags$br(), tags$b("Kimberly Ordonez, PhD Candidate, The Ohio State University"), tags$br(),"Kimberly holds an interest in co-productive science, multi-scale behavioral adaptations to environmental pressures, and environmental justice. Her current projects include Climate Change related adaptations by environmental stakeholders in Ohio including Nongovernmental Organizations, private businesses, nonprofits, and federal offices. Her research goals involve expanding her studies into environmental justice and localized community acceptance of climate change adaptations. Kimberly hopes to one day work in a position of translational science, engaging communities, and scientists alike, to assist in fair and realistic behavioral changes for a positive socio-ecological outcome. She received her Bachelor of Science in Wildlife and Master of Science in Forestry from Purdue University.", tags$br(), tags$em("Email: ordonez.33@osu.edu"), tags$hr()), 
+                               tags$p(style="text-align: left;", tags$img(src = "https://epn.osu.edu/sites/epn/files/imce/Rohit%20Basu.jpg", width = "130px", height = "170px", align = "right"), tags$em("Lead Programmer"), tags$br(), tags$b("Rohit Basu, Grove City High School"), tags$br(), "Rohit is a high school student in Grove City, Ohio. He initially got involved in social-ecological research during his sophomore year of high school. Rohit has applied his expansive computer programming and software knowledge to fully develop the CEN infrastructure. When he graduates high school, Rohit plans to continue his education at a university to study biomedical engineering."))))
+          
         ),
-        fluidRow(
-          column(8, align = "center", offset = 2, box(title = "Bios", width = NULL, bioText))
-        ),
-        fluidRow(
-          column(width = 6, align = "center", box(tags$iframe(src = coverVidURL, width = "100%", height = 300), width = NULL, height = 325))
-        ),
+        
+        
+        # fluidRow(
+        #   column(8, align = "center", offset = 2, box(title = "Contributors", width = NULL, tags$b("This text is bold."))
+        # ),
+        # fluidRow(
+        #   column(width = 6, align = "center", box(tags$iframe(src = coverVidURL, width = "100%", height = 300), width = NULL, height = 325))
+        # ),
       ),
       tabItem(tabName = "networkstab",
-        
-        # -Row 2-
-        fluidRow(
-          column(width = 3, align = "center",
-                 box(title = "Instructions: Filtered Network", width = NULL, "This network only displays all connected nodes to the selected organization/issue. This effectively shows a sub-network of the network above (Full Network)."),
-                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2')),
-                 tags$h1("Legend", width = "50%", height = "50%", align = "center"),
-                 tags$img(src = legendURL, width = "75%", height = "75%", align = "center")
-          ),
-          box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
-          box(title = "Filtered Network Table", width = 3, DT::dataTableOutput('table2')),
-        ),
         
         # -Row 1-
         fluidRow(
           column(width = 3, align = "center",
-                 box(title = "Instructions: Full Network", width = NULL, "This network is a 'full-sandbox' network that shows every organization and issue, and all connections that exist between them. Clicking on any node will select that organization/issue in the drop down menu."),
+                 box(title = "Instructions: Network 1", width = NULL,
+                     tags$b("Looking into a small part of the network."), tags$br(), tags$hr(),
+                     tags$div(tags$p(style="text-align: center;", "In this first network, you will see only the nodes that have a connection to your selected organization/issue. In other words, you're looking at the personal network of your selection. For best results, make sure you're using the full-screen option on your internet browser."),
+                                tags$p(style="text-align: center;", tags$b("1) Select an organization or environmental issue from the drop-down menu to the left"), ", and then", tags$b("2) toggle the 'Show Organizations' and 'Show Issues' check-boxes"), "to see how the network changes! Try selecting your own organization, too!"),
+                     )),
+                 box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description2')),
+                 tags$h3("Legend", width = "30%", height = "30%", align = "right"),
+                 tags$img(src = legendURL, width = "60%", height = "60%", align = "right")
+          ),
+          box(width = 6, height = 850, visNetworkOutput("network_proxy_tab2", height = 800)),
+          box(title = "Table: Network 1", width = 3, DT::dataTableOutput('table2')),
+        ),
+        
+        # -Row 2-
+        fluidRow(
+          column(width = 3, align = "center",
+                 box(title = "Instructions: Network 2", width = NULL,
+                     tags$b("Taking a look at the whole Columbus network."), tags$br(), tags$hr(),
+                     tags$div(tags$p(style="text-align: center;", "In this second network, all nodes are shown. The result is a complex circle of connections.", tags$b("3) Select an organization from the drop-down menu to the left"), "and it will automatically be highlighted on the network. Zoom in and out using your mouse or cursor to see different parts of the network."),
+                              tags$p(style="text-align: center;", tags$b("4) Toggle off the 'Show Organizations' check-box to the left."), "You'll now see a network of 19 environmental issues.", tags$b("5) Click on an edge between a pair of issues"), "to learn more about how they are interdependent. We collected this data from a group of experts in Ohio."),
+                     )),                 
                  box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description1')),
-                 tags$h1("Legend", width = "50%", height = "50%", align = "center"),
-                 tags$img(src = legendURL, width = "75%", height = "75%", align = "center")
+                 tags$h3("Legend", width = "30%", height = "30%", align = "right"),
+                 tags$img(src = legendURL, width = "60%", height = "60%", align = "right")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab1", height = 800)),
-          box(title = "Full Network Table", width = 3, DT::dataTableOutput('table1')),
+          box(title = "Table: Network 2", width = 3, DT::dataTableOutput('table1')),
         ),
         
         # -Row 3-
         fluidRow(
           column(width = 3, align = "center",
-                 box(title = "Instructions: Recommended Partners", width = NULL, "This network requires an organization to be selected from the drop down menu. This network shows all issues connected to the selected organization (from the drop down menu), and it shows all organizations connected to that set of issues (regardless of their connection to the selected organization). The network can be further filtered to only include organizations connected to a certain issue, which can be selected in the drop down menu below. The table on the right displays the amount of issues an organization and the selected organization have in common (Frequency), and it can be sorted by selecting the column header."),
+                 box(title = "Instructions: Network 3", width = NULL,
+                     tags$b("Addressing your collaborative gaps."), tags$br(), tags$hr(),
+                     tags$div(tags$p(style="text-align: center;", "In this third network, ", tags$b("6) select your organization from the drop-down menu."), "The result is a circle-shaped network of every organization who shares a management issue with your organization. If there is a red connection between your organization and another, it means that you do not collaborate despite sharing an issue in common. We refer to this as a 'collaborative gap'. Dark green connections indicate that there is collaboration."), 
+                              tags$p(tags$b(" 7) Take a look at the 'Recommended Partners Table' to the right"), "to see which potential partners share the most issues in common (i.e., gaps)"),
+                              tags$p(style="text-align: center;", "You will probably notice that this network is highly complex. To make it more simple,", tags$b("8) select a specific issue from the 'Filter Issue' drop-box below"), ", which will narrow down the network to a specific environmental issue and the organizations who manage it."),
+                              tags$p(style="text-align: center;", "The purpose of this third network is to showcase the world of potential partners who work on issue similar to you, who might make good partners.", tags$b("9) Click on the node of a potential partner"), "to learn more about them, or visit their profile on the 'Actor Profiles' tab."),
+                              tags$p(style="text-align: center;", tags$b("10) Write down a list of potential partners"), "that seem like a good fit and check out their profile on the 'Actor Profiles' tab. Once you're done,", tags$b("11) update your organization's data by completing the data entry form link on the 'Home' page.")),
+                              
+                               )),   
                  box(title = "Description of Selected Node/Edge", width = NULL, htmlOutput('description3')),
                  box(width = NULL, selectInput("issueFilter", "Filter Issue :", "N/A", selected = "N/A")),
                  box(width = NULL, selectInput("orgFilter", "Filter Organization :", "N/A", selected = "N/A")),
-                 tags$h1("Legend", width = "50%", height = "50%", align = "center"),
-                 tags$img(src = legendURL, width = "75%", height = "75%", align = "center")
+                 tags$h3("Legend", width = "30%", height = "30%", align = "right"),
+                 tags$img(src = legendURL, width = "60%", height = "60%", align = "right")
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
-          box(title = "Recommended Partners Table", width = 3, DT::dataTableOutput('table3'))
+          box(title = "Table: Network 3", width = 3, tags$em("In this table, the most highly recommended partners for the selected organization will appear at the top. This is based on the number of collaborative gaps that can be closed through partnership."), DT::dataTableOutput('table3'))
         )
       ),
       tabItem(tabName = "actorprofiletab",
         column(width = 5,
-          box(title = "Image", width = NULL, htmlOutput('logo')),
+          box(title = "", width = NULL, htmlOutput('logo')),
           box(title = "Coordination Delegate", width = NULL, htmlOutput('coordinatedelegate')),
-          box(title = "Actor Description", width = NULL, htmlOutput('actordescription')),
-          box(title = "Actor Type", width = NULL, htmlOutput('actortype')),
-          box(title = "Actor Website Hyperlinks", width = NULL, uiOutput('actorwebsite')),
-          box(title = "Last Updated Date", width = NULL, htmlOutput('lastupdated'))
+          box(title = "Organization Description", width = NULL, htmlOutput('actordescription')),
+          box(title = "Organization Type", width = NULL, htmlOutput('actortype')),
+          box(title = "Website", width = NULL, uiOutput('actorwebsite')),
+          box(title = "This Organization's Most Recent Data Update", width = NULL, htmlOutput('lastupdated'))
         ),
-        box(width = 6, title = "Recommended Partners Table", DT::dataTableOutput('table4')),
+        box(width = 6, title = "Recommended Partners for this Organization", tags$em("In the table below, we recommend potential partners based upon who works on the greatest number of issues in common with you (i.e., 'gaps')."), DT::dataTableOutput('table4')),
         visNetworkOutput("network_proxy_tab4", height = 0)
       )
     )
