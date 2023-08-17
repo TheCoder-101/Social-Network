@@ -121,11 +121,12 @@ ui <- dashboardPage(
                          h4("A data hub for environmental collaboration in Central Ohio", align = "center"), 
           tags$div(style = "display: flex; justify-content: center")))
         ),
-        
-        fluidRow(
-          tags$img(src = "CENT_LOGO.png", width = "130px", height = "170px", align = "center"), tags$br()
-           ),
-        
+        ##LOGO
+        fluidRow(align = "center",
+          tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT_LOGO.png", width = "578px", height = "175px", align = "center"), tags$br(),
+           tags$hr()),
+       
+        ##ABOUT
         fluidRow(
           column(width = 8, align = "center", offset = 2, length = 20, 
                  box(title = "About", width = NULL,
@@ -134,6 +135,7 @@ ui <- dashboardPage(
                               tags$p(style="text-align: left; font-size:17px", "Check out our 'Networks' tab to walk through the data! Please reach out to us if you have any questions, concerns, or ideas! Our contact information is below. Happy networking!")
                               
         )))),
+        ##FAQ
         fluidRow(
           column(width = 6, align = "center",
                  box(title = "Frequently Asked Questions", width = NULL, 
@@ -146,11 +148,15 @@ ui <- dashboardPage(
                               tags$p(style="text-align: left;", tags$b("Question:"), "So... what's next?", tags$br(), tags$b("Answer:"), "We are always looking to add new features to CEN and we're working on a few at the moment. Stay tuned for updates!")
                               
                      ))),
+          ##VIDEO
           column(width = 6, box(title = "CENT at Environmental Professionals Network, 9/22", tags$iframe(src = coverVidURL, width = "100%", height = 750), width = NULL, height = 810))
         ),
+        ##DATA UPDATE
         fluidRow(
           column(8, align = "center", offset = 2, box(title = "Update your organization's information!", width = NULL, HTML(paste(dataURL, sep = '<br/>'))))
         ),
+        
+        ##CONTRIBUTORS
         fluidRow(
           column(width = 8, align = "center", offset = 2, length = 20, 
                  box(title = "Contributors", width = NULL, 
@@ -159,7 +165,10 @@ ui <- dashboardPage(
                                tags$p(style="text-align: left;", tags$img(src = "https://epn.osu.edu/sites/epn/files/imce/Rohit%20Basu.jpg", width = "130px", height = "170px", align = "right"), tags$em("Lead Programmer"), tags$br(), tags$b("Rohit Basu, Grove City High School"), tags$br(), "Rohit is a high school student in Grove City, Ohio. He initially got involved in social-ecological research during his sophomore year of high school. Rohit has applied his expansive computer programming and software knowledge to fully develop the CENT infrastructure. When he graduates high school, Rohit plans to continue his education at a university to study biomedical engineering."))))
           
         ),
-        
+        ##BottomLogo
+        fluidRow(align = "center",
+                 tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT_LOGO.png", width = "230px", height = "70px", align = "center"), tags$br(),
+                 tags$hr()),
         
         # fluidRow(
         #   column(8, align = "center", offset = 2, box(title = "Contributors", width = NULL, tags$b("This text is bold."))
