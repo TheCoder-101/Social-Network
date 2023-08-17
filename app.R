@@ -121,6 +121,11 @@ ui <- dashboardPage(
                          h4("A data hub for environmental collaboration in Central Ohio", align = "center"), 
           tags$div(style = "display: flex; justify-content: center")))
         ),
+        
+        fluidRow(
+          tags$img(src = "", width = "130px", height = "170px", align = "center"), tags$br()
+           ),
+        
         fluidRow(
           column(width = 8, align = "center", offset = 2, length = 20, 
                  box(title = "About", width = NULL,
