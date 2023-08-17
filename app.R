@@ -123,7 +123,7 @@ ui <- dashboardPage(
         ),
         
         fluidRow(
-          tags$img(src = "", width = "130px", height = "170px", align = "center"), tags$br()
+          tags$img(src = "CENT_LOGO.png", width = "130px", height = "170px", align = "center"), tags$br()
            ),
         
         fluidRow(
