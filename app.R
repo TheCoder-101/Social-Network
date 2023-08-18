@@ -123,7 +123,7 @@ ui <- dashboardPage(
         ),
         ##LOGO
         fluidRow(align = "center",
-          tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT_LOGO.png", width = "578px", height = "175px", align = "center"), tags$br(),
+          tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT.drawio.png", width = "578px", height = "175px", align = "center"), tags$br(),
            tags$hr()),
        
         ##ABOUT
@@ -167,7 +167,7 @@ ui <- dashboardPage(
         ),
         ##BottomLogo
         fluidRow(align = "center",
-                 tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT_LOGO.png", width = "230px", height = "70px", align = "center"), tags$br(),
+                 tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT.drawio.png", width = "230px", height = "70px", align = "center"), tags$br(),
                  tags$hr()),
         
         # fluidRow(
@@ -178,11 +178,15 @@ ui <- dashboardPage(
         # ),
       ),
       tabItem(tabName = "networkstab",
+        
+              ##TopLogo
+              fluidRow(align = "center",
+                       tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT.drawio.png", width = "230px", height = "70px", align = "center"), tags$br()),
         # -Row 1-
         fluidRow(
           box(width = NULL, align = 'center',
-              tags$b("Explore the 3 network sections below by following the guide on the left of the page. For best results, we recommend using the full-screen option on a computer."))
-        ),
+              tags$b("Explore the 3 network sections below by following the guide on the left of the page. For best results, we recommend using the full-screen option on a computer."),tags$br(),
+        )),
               
         # -Row 1-
         fluidRow(
@@ -236,9 +240,17 @@ ui <- dashboardPage(
           ),
           box(width = 6, height = 850, visNetworkOutput("network_proxy_tab3", height = 800)),
           box(title = "Table: Network 3", width = 3, tags$em("In this table, the most highly recommended partners for the selected organization will appear at the top. This is based on the number of collaborative gaps that can be closed through partnership."), DT::dataTableOutput('table3'))
-        )
+        ),
+        ##BottomLogo
+        fluidRow(align = "center",
+                 tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT.drawio.png", width = "230px", height = "70px", align = "center"), tags$br(),
+                 tags$hr()),
+        
       ),
       tabItem(tabName = "actorprofiletab",
+              ##TopLogo
+              fluidRow(align = "center",
+                       tags$img(src = "https://raw.githubusercontent.com/SENS-Lab/ActorIssue_Network_Tool/main/CENT.drawio.png", width = "230px", height = "70px", align = "center"), tags$br(), tags$hr()),
         column(width = 5,
           box(title = "", width = NULL, htmlOutput('logo')),
           box(title = "Coordination Delegate", width = NULL, htmlOutput('coordinatedelegate')),
