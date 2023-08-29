@@ -1,0 +1,13 @@
+name: NetworkOfStakeholders
+title: NetworkOfStakeholders
+username:
+account: networkofstakeholders
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9512409
+bundleId: 7499261
+url: https://networkofstakeholders.shinyapps.io/NetworkOfStakeholders/
+when: 1690385628.574
+lastSyncTime: 1690385628.57401
+asMultiple: FALSE
+asStatic: FALSE

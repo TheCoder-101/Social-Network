@@ -1,0 +1,14 @@
+name: ActorIssue_Network_Tool
+title: ActorIssue_Network_Tool
+username:
+account: networkofstakeholders
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6967024
+bundleId: 6286180
+url: https://networkofstakeholders.shinyapps.io/ActorIssue_Network_Tool/
+when: 1662747655.22134
+lastSyncTime: 1662747655.22135
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: actor_descriptions.csv|Reduced_Actor-Actor Edgelist.csv|Reduced_Actor-Issue Edgelist.csv|Sunbelt_ActorEdgelist.csv|Sunbelt_AI_Edgelist.csv|Sunbelt_Nodelist.csv|USETHIS_issue-issue_data.csv

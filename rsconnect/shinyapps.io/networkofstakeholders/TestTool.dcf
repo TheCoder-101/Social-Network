@@ -1,0 +1,14 @@
+name: TestTool
+title: TestTool
+username:
+account: networkofstakeholders
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7162675
+bundleId: 6352570
+url: https://networkofstakeholders.shinyapps.io/TestTool/
+when: 1664473010.89549
+lastSyncTime: 1664473010.8955
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|actor_descriptions.csv|epn_aa_edgelist.csv|epn_actorattributes.csv|epn_ai_edgelist.csv|epn_issueattributes.csv|ii_edgelist_weights.csv|README.md|Reduced_Actor-Actor Edgelist.csv|Reduced_Actor-Issue Edgelist.csv|Sunbelt_ActorEdgelist.csv|Sunbelt_AI_Edgelist.csv|Sunbelt_Nodelist.csv|USETHIS_issue-issue_data.csv

@@ -1,0 +1,13 @@
+name: ColumbusEnvironmentalNetworking
+title: ColumbusEnvironmentalNetworking
+username:
+account: networkofstakeholders
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9519130
+bundleId: 7581032
+url: https://cbus-environmental-networking.shinyapps.io/ColumbusEnvironmentalNetworking/
+when: 1692307236.08658
+lastSyncTime: 1692307236.08661
+asMultiple: FALSE
+asStatic: FALSE
